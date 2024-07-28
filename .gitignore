@@ -19,6 +19,7 @@ desktop.ini
 
 // C
 C/ParsePacket
+C/Galaxy
 C/*/*.exe
 
 // C++
