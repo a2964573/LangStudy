@@ -1,0 +1,3 @@
+<div data-base="AView" data-class="TabView" class="AView-Style" style="left: 0px; top: 0px; width: 100%; height: 100%; background-color: rgb(87, 255, 0); position: absolute;" data-class-map="{&quot;afc&quot;:[&quot;AView&quot;,&quot;ALabel&quot;]}">
+    <label data-base="ALabel" data-class="ALabel" class="ALabel-Style" style="width: auto; height: auto; position: absolute; left: calc(50% - 0px); top: calc(50% - 0px); font-size: 64px; font-weight: bold;" data-center-y="true" data-center-x="true" id="TabView--lbl"></label>
+</div>

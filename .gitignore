@@ -15,7 +15,6 @@ desktop.ini
 // node
 */*/node_modules
 */*/*/node_modules
-*/*/*/
 
 // C
 C/ParsePacket
@@ -42,12 +41,11 @@ Python/*/*.spec
 Python/HanaAutoVPN
 
 // SpiderGen
-SpiderGen/*/bin/Framework
-SpiderGen/*/bin/Library
-SpiderGen/*/bin/Query
-SpiderGen/*/bin/Source
-SpiderGen/*/bin/Template
-SpiderGen/*/bin/index.html
+SpiderGen/*/bin
+SpiderGen/*/Bridge
+SpiderGen/*/Library
+SpiderGen/*/Query
+SpiderGen/*/Template
 SpiderGen/*/*.inf
 SpiderGen/*/*.inc
 SpiderGen/*/*.prj
