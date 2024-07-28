@@ -1,10 +1,21 @@
 // directory
 desktop.ini
 
+// git
+*/.git
+*/*/.git
+*/.gitignore
+*/.README.md
+
 // vscode
 .vscode
 */.vscode
 */*/.vscode
+
+// node
+*/*/node_modules
+*/*/*/node_modules
+*/*/*/
 
 // C
 C/ParsePacket
@@ -22,7 +33,25 @@ Javascript/TeemBee
 Javascript/TodoList
 
 // Python
+Python/*/__pycache__
+Python/*/build
+Python/*/dist
+Python/*/log
+Python/*/*.spec
 Python/HanaAutoVPN
+
+// SpiderGen
+SpiderGen/*/bin/Framework
+SpiderGen/*/bin/Library
+SpiderGen/*/bin/Query
+SpiderGen/*/bin/Source
+SpiderGen/*/bin/Template
+SpiderGen/*/bin/index.html
+SpiderGen/*/*.inf
+SpiderGen/*/*.inc
+SpiderGen/*/*.prj
+SpiderGen/*/*/*.prj
+
 
 // Unreal
 Unreal/*/.vs
