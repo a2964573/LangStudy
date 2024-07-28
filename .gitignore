@@ -1,0 +1,29 @@
+.vscode
+*/.vscode
+*/*/.vscode
+
+// C
+C/ParsePacket
+
+// C++
+Cpp/*/*.exe
+
+// Javaccript
+Javascript/BlueStar
+Javascript/Calculator
+Javascript/ParsePacket
+Javascript/SWRuneManage
+Javascript/TeemBee
+Javascript/TodoList
+
+// Python
+Python/HanaAutoVPN
+
+// Unreal
+Unreal/*/.vs
+Unreal/*/Intermediate
+Unreal/*/Saved
+Unreal/*/Build
+Unreal/*/Plugins
+Unreal/*/*.sln
+Unreal/*/*._BuiltData.uasset
