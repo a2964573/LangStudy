@@ -1,7 +1,17 @@
 #include "main.h"
 
+// argv[0]: program name
+// argv[1]: start number
+// argv[2]: end number
+// argv[3]: maximum calculations
+// argv[4]: columns
 int main(int argc, char *argv[])
 {
+    if(argc < 5) {
+        std::cerr << "Please enter more Arguments..." << std::endl;
+        return -1;
+    }
+
     SETTING setting = {0,};
 
     init(argc, argv, setting);

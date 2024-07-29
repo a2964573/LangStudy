@@ -6,6 +6,11 @@
 // argv[3]: print mode (normal: 1 or reverse: 0)
 int main(int argc, char* argv[])
 {
+    if(argc < 4) {
+        std::cerr << "Please enter more Arguments..." << std::endl;
+        return -1;
+    }
+
     SETTING setting = {0,}; 
 
     init(argc, argv, setting);
