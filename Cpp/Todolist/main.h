@@ -62,5 +62,6 @@ void showTitle() noexcept;
 int onClickKeyEvent() noexcept;
 int insertList(GLOBAL& _global, LIST& list);
 void printList(const LIST& list) noexcept;
+int inputValue(const char* name, int max_size, char* output) noexcept;
 
 #endif // MAIN_H

@@ -76,22 +76,6 @@ int init(int argc, char *argv[], GLOBAL& _global)
     return 0;
 }
 
-void showTitle() noexcept
-{
-    // system("cls");
-    std::cout << TODOLIST << std::endl;
-}
-
-int onClickKeyEvent() noexcept
-{
-    int key = static_cast<int>(getch());
-    if(65 <= key && key <= 90) {
-        key += 32;
-    }
-
-    return key;
-}
-
 int insertList(GLOBAL& _global, LIST& list)
 {
     uint tag_cnt    = 0;
@@ -99,31 +83,24 @@ int insertList(GLOBAL& _global, LIST& list)
     char desc[2048] = {0,};
     std::string input;
 
-    std::cout << "Input now list title." << std::endl;
-    std::cin >> input;
-    if(input.length() > 256) {
-        std::cerr << "list title too long: " << input << "(" << input.length() << "byte)" << std::endl;
-        return -1;
-    }
-    strcpy(title, input.c_str());
+    inputValue("title"      , sizeof(title), title);
+    inputValue("description", sizeof(desc) , desc );
 
-    std::cout << "Input now list description." << std::endl;
-    std::cin >> input;
-    if(input.length() > 1024) {
-        std::cerr << "list description too long: " << input << "(" << input.length() << "byte)" << std::endl;
-        return -1;
-    }
-    strcpy(desc, input.c_str());
-
-    std::cout << "Want to add a tag? (y/n)" << std::endl;
-    int key = onClickKeyEvent();
-    switch(key) {
-        case ANSWER_YES :
+    int key;
+    while(true) {
+        std::cout << "Want to add a tag? (y/n)" << std::endl;
+        key = onClickKeyEvent();
+        if(key == ANSWER_YES) {
             // tag_cnt = editTags(list);
-        break;
-        case ANSWER_NO  :
+        }
+        else
+        if(key == ANSWER_NO) {
             std::cout << "No tag added." << std::endl;
-        break;
+            break;
+        }
+        else {
+            std::cout << "Invalid input. Please try again." << std::endl;
+        }
     }
 
     list.id      = ++_global.last_id;
@@ -137,21 +114,22 @@ int insertList(GLOBAL& _global, LIST& list)
     strcpy(list.clr_date, "00000000");
     strcpy(list.clr_time, "00000000");
 
-    return 0;
-}
-
-void printList(const LIST& list) noexcept
-{
-    std::cout << "ID         : " << list.id       << std::endl;
-    std::cout << "Index      : " << list.index    << std::endl;
-    std::cout << "Input Date : " << list.in_date  << std::endl;
-    std::cout << "Input Time : " << list.in_time  << std::endl;
-    std::cout << "Title      : " << list.title    << std::endl;
-    std::cout << "Description: " << list.desc     << std::endl;
-    std::cout << "Clear Date : " << list.clr_date << std::endl;
-    std::cout << "Clear Time : " << list.clr_time << std::endl;
-    std::cout << "Tag Count  : " << list.tag_cnt  << std::endl;
-    std::cout << std::endl;
+    while(true) {
+        std::cout << "Save this list? (y/n)" << std::endl;
+        key = onClickKeyEvent();
+        if(key == ANSWER_YES) {
+            // saveList(_global, list);
+            return 0;
+        }
+        else
+        if(key == ANSWER_NO) {
+            std::cout << "List not saved." << std::endl;
+            return 0;
+        }
+        else {
+            std::cout << "Invalid input. Please try again." << std::endl;
+        }
+    }
 }
 
 int editTags(LIST& list)
