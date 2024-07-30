@@ -20,9 +20,11 @@ desktop.ini
 C/ParsePacket
 C/Galaxy
 C/*/*.exe
+C/*/*.txt
 
 // C++
 Cpp/*/*.exe
+Cpp/*/*.txt
 
 // Javaccript
 Javascript/BlueStar
