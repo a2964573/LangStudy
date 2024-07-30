@@ -49,3 +49,27 @@ int inputValue(const char* name, int max_size, char* output) noexcept
 
     return strlen(output);
 }
+
+int confirm(const char* message) noexcept
+{
+    int rtn = -1;
+    int key;
+    while(true) {
+        std::cout << message << " (y/n)" << std::endl;
+        key = onClickKeyEvent();
+        if(key == ANSWER_YES) {
+            rtn = 1;
+            break;
+        }
+        else
+        if(key == ANSWER_NO) {
+            rtn = 0;
+            break;
+        }
+        else {
+            std::cout << "Invalid input. Please try again." << std::endl;
+        }
+    }
+
+    return rtn;
+}

@@ -57,11 +57,15 @@ typedef struct {
     TAG  tags     [MAX_TAG_COUNT];
 } LIST;
 
+// main
 int init(int argc, char* argv[], GLOBAL& _global);
-void showTitle() noexcept;
-int onClickKeyEvent() noexcept;
 int insertList(GLOBAL& _global, LIST& list);
+
+// util
+void showTitle() noexcept;
 void printList(const LIST& list) noexcept;
+int onClickKeyEvent() noexcept;
 int inputValue(const char* name, int max_size, char* output) noexcept;
+int confirm(const char* message) noexcept;
 
 #endif // MAIN_H

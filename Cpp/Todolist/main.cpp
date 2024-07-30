@@ -78,6 +78,7 @@ int init(int argc, char *argv[], GLOBAL& _global)
 
 int insertList(GLOBAL& _global, LIST& list)
 {
+    int rtn;
     uint tag_cnt    = 0;
     char title[512] = {0,};
     char desc[2048] = {0,};
@@ -86,21 +87,11 @@ int insertList(GLOBAL& _global, LIST& list)
     inputValue("title"      , sizeof(title), title);
     inputValue("description", sizeof(desc) , desc );
 
-    int key;
-    while(true) {
-        std::cout << "Want to add a tag? (y/n)" << std::endl;
-        key = onClickKeyEvent();
-        if(key == ANSWER_YES) {
-            // tag_cnt = editTags(list);
-        }
-        else
-        if(key == ANSWER_NO) {
-            std::cout << "No tag added." << std::endl;
-            break;
-        }
-        else {
-            std::cout << "Invalid input. Please try again." << std::endl;
-        }
+    rtn = confirm("Want to add a tag?");
+    if(rtn <= 0) {
+        std::cout << "Skip adding tag." << std::endl;
+    } else {
+        // tag_cnt = editTags(list);
     }
 
     list.id      = ++_global.last_id;
@@ -114,21 +105,11 @@ int insertList(GLOBAL& _global, LIST& list)
     strcpy(list.clr_date, "00000000");
     strcpy(list.clr_time, "00000000");
 
-    while(true) {
-        std::cout << "Save this list? (y/n)" << std::endl;
-        key = onClickKeyEvent();
-        if(key == ANSWER_YES) {
-            // saveList(_global, list);
-            return 0;
-        }
-        else
-        if(key == ANSWER_NO) {
-            std::cout << "List not saved." << std::endl;
-            return 0;
-        }
-        else {
-            std::cout << "Invalid input. Please try again." << std::endl;
-        }
+    rtn = confirm("Save this list?");
+    if(rtn <= 0) {
+        std::cout << "No save this list." << std::endl;
+    } else {
+        // saveList(list);
     }
 }
 
