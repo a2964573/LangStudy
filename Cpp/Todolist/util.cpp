@@ -17,12 +17,16 @@ void printList(const LIST& list) noexcept
     std::cout << "Clear Date : " << list.clr_date << std::endl;
     std::cout << "Clear Time : " << list.clr_time << std::endl;
     std::cout << "Tag Count  : " << list.tag_cnt  << std::endl;
+    int pos;
+    for(pos = 0; pos < list.tag_cnt; pos++) {
+        std::cout << "Tag        : #" << list.tags[pos].id << " " << list.tags[pos].name << std::endl;
+    }
     std::cout << std::endl;
 }
 
 int onClickKeyEvent(const char* message) noexcept
 {
-    if(strlen(message) != 0) {
+    if(message != NULL) {
         std::cout << message << std::endl;
     }
 
@@ -40,10 +44,11 @@ int inputValueStr(const char* name, int max_size, char* output) noexcept
     std::string input;
 
     while(true) {
-        std::cout << "Input now   " << name << '.' << std::endl;
+        std::cout << "Input now " << name << '.' << std::endl;
         std::cin >> input;
-        if(input.length() > max_size) {
-            std::cout << "Input value too long: " << input << "(" << input.length() << "byte)" << std::endl;
+        size = input.size();
+        if(size >= max_size) {
+            std::cout << "Input value too long: " << input << "(" << size << "byte)" << std::endl;
             std::cout << "Please try again." << std::endl;
             continue;
         }
@@ -51,32 +56,26 @@ int inputValueStr(const char* name, int max_size, char* output) noexcept
     }
     strcpy(output, input.c_str());
 
-    return strlen(output);
+    return size;
 }
 
 int inputValueUInt(const char* name, uint& output) noexcept
 {
-    uint input;
-    while(true) {
-        std::cout << "Input now   " << name << '.' << std::endl;
-        std::cin >> input;
-        if(input) {
-            std::cout << "Input value too small or big: " << input << std::endl;
-            std::cout << "Please try again." << std::endl;
-            continue;
-        }
-        break;
-    }
+    std::cout << "Input now " << name << '.' << std::endl;
+    std::cin >> output;
 
-    return input;
+    return output;
 }
 
 int confirm(const char* message) noexcept
 {
-    int rtn = -1;
+    if(message != NULL) {
+        std::cout << message << " (y/n)" << std::endl;
+    }
+
+    int rtn;
     int key;
     while(true) {
-        std::cout << message << " (y/n)" << std::endl;
         key = onClickKeyEvent(NULL);
         if(key == ANSWER_YES) {
             rtn = 1;
@@ -127,4 +126,29 @@ int getNowTime(char* format, int size, char* output) noexcept
 
     std::strftime(output, size, dformat, now_tm);
     return 0;
+}
+
+int findTag(int tag_id, TAG& output)
+{
+    std::ifstream inTagConf("_tag.ini");
+    if(!inTagConf.good()) {
+        std::cerr << "Error: Failed to open '_tag.ini'" << std::endl;
+        return -1;
+    }
+
+    std::string tagLine;
+    while(std::getline(inTagConf, tagLine)) {
+        output.id = std::stoi(tagLine.substr(0, tagLine.find(',')));
+        if(output.id == tag_id) {
+            std::strcpy(output.name, tagLine.substr(tagLine.find(',') + 1).c_str());
+            break;
+        }
+    }
+    inTagConf.close();
+
+    if(output.name[0] == 0x00) {
+        output.id = 0x00;
+    }
+
+    return output.id == 0x00 ? 0 : 1;
 }

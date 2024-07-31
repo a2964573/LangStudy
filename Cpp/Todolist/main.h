@@ -58,8 +58,8 @@ typedef struct {
     int  index;
     char in_date  [16  ];
     char in_time  [16  ];
-    char title    [512 ];
-    char desc     [2048];
+    char title    [256 ];
+    char desc     [1024];
     char clr_date [16  ];
     char clr_time [16  ];
     uint tag_cnt;
@@ -68,10 +68,9 @@ typedef struct {
 
 // main
 int init(int argc, char* argv[], GLOBAL& _global);
+int saveList(GLOBAL& _global, LIST& list);
 int insertList(GLOBAL& _global, LIST& list);
-int editTags(LIST& list);
-int addTag(LIST& list);
-int delTag(LIST& list);
+int editTags(GLOBAL& _global, int count, TAG* output);
 
 // util
 void showTitle() noexcept;
@@ -82,5 +81,6 @@ int inputValueUInt(const char* name, uint& output) noexcept;
 int confirm(const char* message) noexcept;
 int getNowDate(char* format, int size, char* output) noexcept;
 int getNowTime(char* format, int size, char* output) noexcept;
+int findTag(int tag_id, TAG& output);
 
 #endif // MAIN_H

@@ -80,7 +80,6 @@ int init(int argc, char *argv[], GLOBAL& _global)
         }
     }
 
-
     std::ifstream inTagConf(TAG_FILE_NAME);
     if(!inTagConf.good()) {
         std::cout << _global.filename << " not found." << std::endl;
@@ -116,39 +115,36 @@ int saveList(GLOBAL& _global, LIST& list)
 }
 
 
-int insertList(GLOBAL& _global, LIST& list)
+int insertList(GLOBAL& _global, LIST& output)
 {
-    int  rtn;
-    uint tag_cnt       =  0;
-    char title  [512 ] = {0,};
-    char desc   [2048] = {0,};
+    char title  [256 ] = {0,};
+    char desc   [1024] = {0,};
     char nowDate[16  ] = {0,};
     char nowTime[16  ] = {0,};
-    std::string input;
 
     inputValueStr("title"      , sizeof(title), title);
     inputValueStr("description", sizeof(desc) , desc );
 
-    rtn = confirm("Want to add a tag?");
-    if(rtn <= 0) {
-        std::cout << "Skip adding tag." << std::endl;
-    } else {
-        tag_cnt = editTags(list);
+    if(confirm("Edit tag?") > 0) {
+        TAG tags[MAX_TAG_COUNT] = {0,};
+        int tag_cnt = editTags(_global, output.tag_cnt, tags);
+        
+        output.tag_cnt = tag_cnt;
+        std::memcpy(output.tags, tags, sizeof(tags[0]) * tag_cnt);
     }
 
     getNowDate(NULL, sizeof(nowDate), nowDate);
     getNowTime(NULL, sizeof(nowTime), nowTime);
 
-    list.id      = _global.list_lastId  + 1;
-    list.index   = _global.list_lastIdx + 1;
-    list.tag_cnt = tag_cnt;
+    output.id      = _global.list_lastId  + 1;
+    output.index   = _global.list_lastIdx + 1;
 
-    strcpy(list.in_date , nowDate   );
-    strcpy(list.in_time , nowTime   );
-    strcpy(list.title   , title     );
-    strcpy(list.desc    , desc      );
-    strcpy(list.clr_date, "00000000");
-    strcpy(list.clr_time, "00000000");
+    strcpy(output.in_date , nowDate   );
+    strcpy(output.in_time , nowTime   );
+    strcpy(output.title   , title     );
+    strcpy(output.desc    , desc      );
+    strcpy(output.clr_date, "00000000");
+    strcpy(output.clr_time, "00000000");
 
     return confirm("Insert this list?");
 }
@@ -167,44 +163,87 @@ int deleteList(GLOBAL& _global, LIST& list)
     return confirm("Delete this list?");
 }
 
-int editTags(LIST& list)
+int editTags(GLOBAL& _global, int count, TAG* output)
 {
-    int tag_cnt = list.tag_cnt;
-    if(tag_cnt == 0) {
-        // 태그 추가 진행
-    } else {
-        int key;
-        key = onClickKeyEvent(NULL);
-        switch(key) {
-            case MODE_TAG_ADD:
-                addTag(list);
+    int tag_cnt = count;
+    int apos;
+    int bpos;
+    int rtn;
+    int key;
+
+    TAG tag = {0,};
+
+    while(true) {
+        memset(&tag, 0x00, sizeof(tag));
+
+        key = onClickKeyEvent("Input mode the Edit tag (a: Add, d: Del, e: End)");
+        if(key == MODE_TAG_ADD) {
+            if(tag_cnt >= MAX_TAG_COUNT) {
+                std::cout << "Tag count over." << std::endl;
+                continue;
+            }
+
+            inputValueUInt("tag id", tag.id);
+            if(confirm("Add this tag?") <= 0) {
+                continue;
+            }
+
+            rtn = findTag(tag.id, tag);
+            if(rtn < 0) {
+                std::cout << "find tag error." << std::endl;
+            }
+            else
+            if(rtn == 0) {
+                std::cout << "not found tag." << std::endl;
+            }
+            else {
+                std::memcpy(&output[tag_cnt], &tag, sizeof(tag));
+                tag_cnt++;
+            }
+        }
+        else
+        if(key == MODE_TAG_DEL) {
+            if(tag_cnt <= 0) {
+                std::cout << "Tag is zero." << std::endl;
+                continue;
+            }
+
+            inputValueUInt("tag id", tag.id);
+            if(confirm("Delete this tag?") <= 0) {
+                continue;
+            }
+
+            apos = 0; // before index(original)
+            bpos = 0; // after index(updated)
+            while(true) {
+                if(output[bpos].id == tag.id) {
+                    bpos++;
+                    continue;
+                }
+                else
+                if(apos == bpos) {
+                    continue;
+                }
+                else
+                if(bpos >= tag_cnt) {
+                    break;
+                }
+
+                std::memcpy(&output[apos], &output[bpos], sizeof(output[0]));
+                apos++;
+                bpos++;
+            }
+
+            tag_cnt--;
+        }
+        else
+        if(key == MODE_TAG_END) {
             break;
-            case MODE_TAG_DEL:
-                delTag(list);
-            break;
+        }
+        else {
+            std::cout << "Unknown key: " << key << std::endl;
         }
     }
 
     return tag_cnt;
-}
-
-int addTag(LIST& list)
-{
-    char name[64] = {0,};
-    inputValueStr("tag name", sizeof(name), name);
-
-    return 0;
-}
-
-int delTag(LIST& list)
-{
-    TAG tag = {0,};
-    uint id;
-    inputValueUInt("tag id", id);
-
-    while(true) {
-
-    }
-
-    return 0;
 }
