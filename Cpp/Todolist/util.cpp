@@ -128,11 +128,29 @@ int getNowTime(char* format, int size, char* output) noexcept
     return 0;
 }
 
+int showAllTags() noexcept
+{
+    std::ifstream inTagConf(TAG_FILE_NAME);
+    if(!inTagConf.good()) {
+        std::cerr << "Error: Failed to open '" << TAG_FILE_NAME << "'" << std::endl;
+        return -1;
+    }
+
+    TAG tag = {0,};
+    std::string tagLine;
+    while(std::getline(inTagConf, tagLine)) {
+        tag.id = std::stoi(tagLine.substr(0, tagLine.find(',')));
+        std::strcpy(tag.name, tagLine.substr(tagLine.find(',') + 1).c_str());
+        std::cout << '#' << tag.id << ' ' << tag.name << std::endl;
+    }
+    inTagConf.close();
+}
+
 int findTag(int tag_id, TAG& output)
 {
-    std::ifstream inTagConf("_tag.ini");
+    std::ifstream inTagConf(TAG_FILE_NAME);
     if(!inTagConf.good()) {
-        std::cerr << "Error: Failed to open '_tag.ini'" << std::endl;
+        std::cerr << "Error: Failed to open '" << TAG_FILE_NAME << "'" << std::endl;
         return -1;
     }
 

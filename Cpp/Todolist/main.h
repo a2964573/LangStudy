@@ -71,6 +71,8 @@ int init(int argc, char* argv[], GLOBAL& _global);
 int saveList(GLOBAL& _global, LIST& list);
 int insertList(GLOBAL& _global, LIST& list);
 int editTags(GLOBAL& _global, int count, TAG* output);
+int addTag(int count, TAG* output);
+int delTag(int count, TAG* output);
 
 // util
 void showTitle() noexcept;
@@ -81,6 +83,7 @@ int inputValueUInt(const char* name, uint& output) noexcept;
 int confirm(const char* message) noexcept;
 int getNowDate(char* format, int size, char* output) noexcept;
 int getNowTime(char* format, int size, char* output) noexcept;
+int showAllTags() noexcept;
 int findTag(int tag_id, TAG& output);
 
 #endif // MAIN_H

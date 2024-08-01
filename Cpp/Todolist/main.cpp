@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
         memset(&list, 0x00, sizeof(list));
 
-        key = onClickKeyEvent(NULL);
+        key = onClickKeyEvent("i: Insert List, u: Update List, d: Delete List, q: exit \n");
         switch(key) {
             case MODE_LIST_INSERT :
                 rtn = insertList(_global, list);
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
         }
 
         if(rtn <= 0) {
-            std::cout << "No save this list." << std::endl;
+            std::cout << "해당 리스트를 저장하지 않습니다.." << std::endl;
             continue;
         }
 
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 int init(int argc, char *argv[], GLOBAL& _global)
 {
     if(strlen(argv[1]) > 1024) {
-        std::cerr << "filename too long: " << argv[1] << "(" << strlen(argv[1]) << "byte)"<< std::endl;
+        std::cerr << "파일명이 너무 깁니다..: " << argv[1] << "(" << strlen(argv[1]) << "byte)"<< std::endl;
         return -1;
     }
 
@@ -65,7 +65,7 @@ int init(int argc, char *argv[], GLOBAL& _global)
     std::ifstream inTodoFile(_global.filename);
     if(!inTodoFile.good()) {
         std::cout << _global.filename << " not found." << std::endl;
-        std::cout << "create new file: " << _global.filename << "..." << std::endl;
+        std::cout << "create new file: " << _global.filename << std::endl;
 
         std::ofstream outTodoFile(_global.filename);
         if(!outTodoFile.good()) {
@@ -83,7 +83,7 @@ int init(int argc, char *argv[], GLOBAL& _global)
     std::ifstream inTagConf(TAG_FILE_NAME);
     if(!inTagConf.good()) {
         std::cout << _global.filename << " not found." << std::endl;
-        std::cout << "create new file: " << TAG_FILE_NAME << "..." << std::endl;
+        std::cout << "create new file: " << TAG_FILE_NAME << std::endl;
 
         std::ofstream outTagConf(TAG_FILE_NAME);
         if(!outTagConf.good()) {
@@ -122,10 +122,10 @@ int insertList(GLOBAL& _global, LIST& output)
     char nowDate[16  ] = {0,};
     char nowTime[16  ] = {0,};
 
-    inputValueStr("title"      , sizeof(title), title);
-    inputValueStr("description", sizeof(desc) , desc );
+    inputValueStr("Title"      , sizeof(title), title);
+    inputValueStr("Description", sizeof(desc) , desc );
 
-    if(confirm("Edit tag?") > 0) {
+    if(confirm("태그를 입력하시겠습니까?") > 0) {
         TAG tags[MAX_TAG_COUNT] = {0,};
         int tag_cnt = editTags(_global, output.tag_cnt, tags);
         
@@ -146,104 +146,121 @@ int insertList(GLOBAL& _global, LIST& output)
     strcpy(output.clr_date, "00000000");
     strcpy(output.clr_time, "00000000");
 
-    return confirm("Insert this list?");
+    return confirm("해당 리스트를 저장하시겠습니까?");
 }
 
 int updateList(GLOBAL& _global, LIST& list)
 {
 
 
-    return confirm("Update this list?");
+    return confirm("해당 리스트를 수정하시겠습니까?");
 }
 
 int deleteList(GLOBAL& _global, LIST& list)
 {
 
 
-    return confirm("Delete this list?");
+    return confirm("해당 리스트를 삭제하시겠습니까?");
 }
 
 int editTags(GLOBAL& _global, int count, TAG* output)
 {
+    TAG tag = {0,};
+
     int tag_cnt = count;
-    int apos;
-    int bpos;
     int rtn;
     int key;
-
-    TAG tag = {0,};
 
     while(true) {
         memset(&tag, 0x00, sizeof(tag));
 
-        key = onClickKeyEvent("Input mode the Edit tag (a: Add, d: Del, e: End)");
-        if(key == MODE_TAG_ADD) {
-            if(tag_cnt >= MAX_TAG_COUNT) {
-                std::cout << "Tag count over." << std::endl;
-                continue;
-            }
-
-            inputValueUInt("tag id", tag.id);
-            if(confirm("Add this tag?") <= 0) {
-                continue;
-            }
-
-            rtn = findTag(tag.id, tag);
+        key = onClickKeyEvent("a: Add, d: Del, e: End");
+        if(key == MODE_TAG_ADD || key == MODE_TAG_DEL) {
+            rtn = key == MODE_TAG_ADD ? addTag(tag_cnt, output) : delTag(tag_cnt, output);
             if(rtn < 0) {
-                std::cout << "find tag error." << std::endl;
-            }
-            else
-            if(rtn == 0) {
-                std::cout << "not found tag." << std::endl;
-            }
-            else {
-                std::memcpy(&output[tag_cnt], &tag, sizeof(tag));
-                tag_cnt++;
-            }
-        }
-        else
-        if(key == MODE_TAG_DEL) {
-            if(tag_cnt <= 0) {
-                std::cout << "Tag is zero." << std::endl;
                 continue;
             }
 
-            inputValueUInt("tag id", tag.id);
-            if(confirm("Delete this tag?") <= 0) {
-                continue;
-            }
-
-            apos = 0; // before index(original)
-            bpos = 0; // after index(updated)
-            while(true) {
-                if(output[bpos].id == tag.id) {
-                    bpos++;
-                    continue;
-                }
-                else
-                if(apos == bpos) {
-                    continue;
-                }
-                else
-                if(bpos >= tag_cnt) {
-                    break;
-                }
-
-                std::memcpy(&output[apos], &output[bpos], sizeof(output[0]));
-                apos++;
-                bpos++;
-            }
-
-            tag_cnt--;
+            tag_cnt = rtn;
         }
         else
         if(key == MODE_TAG_END) {
             break;
         }
         else {
-            std::cout << "Unknown key: " << key << std::endl;
+            std::cout << "Invalid input. Please try again." << std::endl;
         }
     }
 
     return tag_cnt;
+}
+
+int addTag(int count, TAG* output)
+{
+    TAG tag = {0,};
+    int rtn;
+    if(count >= MAX_TAG_COUNT) {
+        std::cout << "더 이상 추가할 수 없습니다." << std::endl;
+        return -1;
+    }
+
+    showAllTags();
+    inputValueUInt("Tag Id", tag.id);
+    if(confirm("리스트에 태그를 추가하시겠습니까?") <= 0) {
+        return -1;
+    }
+
+    rtn = findTag(tag.id, tag);
+    if(rtn < 0) {
+        std::cout << "Find Tag Error." << std::endl;
+    }
+    else
+    if(rtn == 0) {
+        std::cout << "Not Found Tag." << std::endl;
+        rtn = -1;
+    }
+    else {
+        std::memcpy(&output[count], &tag, sizeof(tag));
+        rtn = count + 1;
+    }
+
+    return rtn;
+}
+
+int delTag(int count, TAG* output)
+{
+    TAG tag = {0,};
+    int rtn;
+    if(count <= 0) {
+        std::cout << "삭제할 태그가 없습니다." << std::endl;
+        return -1;
+    }
+
+    inputValueUInt("Tag Id", tag.id);
+    if(confirm("리스트에서 태그를 삭제하시겠습니까?") <= 0) {
+        return -1;
+    }
+
+    int apos = 0; // after index(updated)
+    int bpos = 0; // before index(original)
+    while(true) {
+        if(output[bpos].id == tag.id) {
+            bpos++;
+            continue;
+        }
+        else
+        if(bpos >= count) {
+            break;
+        }
+
+        if(apos != bpos) {
+            std::memcpy(&output[apos], &output[bpos], sizeof(output[0]));
+        }
+        apos++;
+        bpos++;
+    }
+    std::memset(&output[count], 0x00, sizeof(output[count]));
+    count -= 1;
+
+    return count;
 }
