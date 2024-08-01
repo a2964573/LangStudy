@@ -10,6 +10,7 @@
 #include <ctime>
 #include <vector>
 #include <algorithm>
+#include <iomanip>
 
 #include <conio.h>
 
@@ -79,17 +80,18 @@ int delTag(int count, TAG* output);
 
 // util
 int showTitle() noexcept;
-int showList(GLOBAL& _global) noexcept;
+int showList(GLOBAL& _global);
+int getListAll(GLOBAL& _global, LIST* output);
+int parseCSVLine(const LIST& list, char* output);
 int printList(const LIST& list) noexcept;
+int showAllTags() noexcept;
+int findTag(int tag_id, TAG& output);
 int onClickKeyEvent(const char* message) noexcept;
+int confirm(const char* message) noexcept;
 int inputValueUInt(const char* name, uint& output) noexcept;
 int inputValueWord(const char* name, int max_size, char* output) noexcept;
 int inputValueString(const char* name, int max_size, char* output) noexcept;
-int confirm(const char* message) noexcept;
 int getNowDate(char* format, int size, char* output) noexcept;
 int getNowTime(char* format, int size, char* output) noexcept;
-int showAllTags() noexcept;
-int findTag(int tag_id, TAG& output);
-int parseCSVLine(const LIST& list, char* output);
 
 #endif // MAIN_H

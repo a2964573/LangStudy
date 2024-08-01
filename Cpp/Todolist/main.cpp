@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
     int key;
     while(true) {
         showTitle();
+        showList(_global);
 
         memset(&list, 0x00, sizeof(list));
 
@@ -130,10 +131,16 @@ int saveList(GLOBAL& _global, LIST& list)
         _global.list_lastIdx = list.index;
     }
 
-    std::string line;
-
+    int rtn;
     // Insert
     if(_global.list_lastId == list.id) {
+        char appendLine[LIST_SIZE] = {0,};
+        rtn = parseCSVLine(list, appendLine);
+        if(rtn < 0) {
+            std::cout << "Error: Parse CSV string failed" << std::endl << std::endl;
+            return -1;
+        }
+
         std::ofstream outTodoFile;
         outTodoFile.open(_global.filename, std::ios::app);
         if(!outTodoFile) {
@@ -141,19 +148,17 @@ int saveList(GLOBAL& _global, LIST& list)
             return -1;
         }
 
-        char appendLine[LIST_SIZE] = {0,};
-        int rtn = parseCSVLine(list, appendLine);
-        if(rtn < 0) {
-            std::cout << "Error: Parse CSV string failed" << std::endl << std::endl;
-            return -1;
-        }
-
         outTodoFile << appendLine << '\n';
+        outTodoFile.close();
     } 
     // update / delete
     else {
-        LIST* list = new LIST[_global.list_lastId];
-        std::ifstream inTodoFile(_global.filename);
+        LIST* lists = new LIST[_global.list_lastId];
+        rtn = getListAll(_global, lists);
+        if(rtn < 0) {
+            std::cout << "Error: Get List All Failed" << std::endl << std::endl;
+            return -1;
+        }
     }
 
     return 0;
@@ -253,6 +258,14 @@ int addTag(int count, TAG* output)
     rtn = inputValueUInt("Tag Id", tag.id);
     if(rtn == 0) {
         return -1;
+    }
+
+    int pos;
+    for(pos = 0; pos < count; pos++) {
+        if(output[pos].id == tag.id) {
+            std::cout << "중복된 태그입니다." << std::endl << std::endl;
+            return -1;
+        }
     }
 
     if(confirm("리스트에 태그를 추가하시겠습니까?") <= 0) {
