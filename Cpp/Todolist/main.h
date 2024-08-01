@@ -9,6 +9,7 @@
 #include <chrono>
 #include <ctime>
 #include <vector>
+#include <algorithm>
 
 #include <conio.h>
 
@@ -56,6 +57,7 @@ typedef struct {
 typedef struct {
     uint id;
     int  index;
+    int  status;
     char in_date  [16  ];
     char in_time  [16  ];
     char title    [256 ];
@@ -65,6 +67,7 @@ typedef struct {
     uint tag_cnt;
     TAG  tags     [MAX_TAG_COUNT];
 } LIST;
+#define LIST_SIZE sizeof(LIST)
 
 // main
 int init(int argc, char* argv[], GLOBAL& _global);
@@ -75,15 +78,18 @@ int addTag(int count, TAG* output);
 int delTag(int count, TAG* output);
 
 // util
-void showTitle() noexcept;
-void printList(const LIST& list) noexcept;
+int showTitle() noexcept;
+int showList(GLOBAL& _global) noexcept;
+int printList(const LIST& list) noexcept;
 int onClickKeyEvent(const char* message) noexcept;
-int inputValueStr(const char* name, int max_size, char* output) noexcept;
 int inputValueUInt(const char* name, uint& output) noexcept;
+int inputValueWord(const char* name, int max_size, char* output) noexcept;
+int inputValueString(const char* name, int max_size, char* output) noexcept;
 int confirm(const char* message) noexcept;
 int getNowDate(char* format, int size, char* output) noexcept;
 int getNowTime(char* format, int size, char* output) noexcept;
 int showAllTags() noexcept;
 int findTag(int tag_id, TAG& output);
+int parseCSVLine(const LIST& list, char* output);
 
 #endif // MAIN_H

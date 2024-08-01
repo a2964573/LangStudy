@@ -1,15 +1,40 @@
 #include "main.h"
 
-void showTitle() noexcept
+int showTitle() noexcept
 {
     // system("cls");
     std::cout << TODOLIST << std::endl;
+
+    return 0;
 }
 
-void printList(const LIST& list) noexcept
+int showList(GLOBAL& _global) noexcept
+{
+    int pos = 0;
+    LIST* list = new LIST[_global.list_lastIdx];
+    std::ifstream inTodoFile(_global.filename);
+    std::string todoLine;
+    while(std::getline(inTodoFile, todoLine)) {
+        list[pos].id        = std::stoi(todoLine.substr(0, todoLine.find(','))         );
+        list[pos].index     = std::stoi(todoLine.substr(todoLine.find(',') + 1)        );
+        list[pos].status    = std::stoi(todoLine.substr(todoLine.find(',') + 2)        );
+        std::strcpy(list[pos].in_date , todoLine.substr(todoLine.find(',') + 3).c_str());
+        std::strcpy(list[pos].in_time , todoLine.substr(todoLine.find(',') + 4).c_str());
+        std::strcpy(list[pos].title   , todoLine.substr(todoLine.find(',') + 5).c_str());
+        std::strcpy(list[pos].desc    , todoLine.substr(todoLine.find(',') + 6).c_str());
+        std::strcpy(list[pos].clr_date, todoLine.substr(todoLine.find(',') + 7).c_str());
+        std::strcpy(list[pos].clr_time, todoLine.substr(todoLine.find(',') + 8).c_str());
+        list[pos].tag_cnt   = std::stoi(todoLine.substr(todoLine.find(',') + 9)        );
+    }
+
+    return 0;
+}
+
+int printList(const LIST& list) noexcept
 {
     std::cout << "ID         : " << list.id       << std::endl;
     std::cout << "Index      : " << list.index    << std::endl;
+    std::cout << "Status     : " << list.status   << std::endl;
     std::cout << "Input Date : " << list.in_date  << std::endl;
     std::cout << "Input Time : " << list.in_time  << std::endl;
     std::cout << "Title      : " << list.title    << std::endl;
@@ -22,6 +47,28 @@ void printList(const LIST& list) noexcept
         std::cout << "Tag        : #" << list.tags[pos].id << " " << list.tags[pos].name << std::endl;
     }
     std::cout << std::endl;
+
+    return 0;
+}
+
+int parseCSVLine(const LIST& list, char* output)
+{
+    int len = sprintf(output, "%d,%d,%d,%s,%s,%s,%s,%s,%s,%d"
+                , list.id      , list.index   , list.status
+                , list.in_date , list.in_time , list.title
+                , list.desc    , list.clr_date, list.clr_time
+                , list.tag_cnt);
+    int pos = 0;
+    while(true) {
+        if(pos >= list.tag_cnt) {
+            break;
+        }
+
+        len += sprintf(&output[len], ",%d,%s", list.tags[pos].id, list.tags[pos].name);
+        pos++;
+    }
+
+    return len;
 }
 
 int onClickKeyEvent(const char* message) noexcept
@@ -38,18 +85,35 @@ int onClickKeyEvent(const char* message) noexcept
     return key;
 }
 
-int inputValueStr(const char* name, int max_size, char* output) noexcept
+int inputValueUInt(const char* name, uint& output) noexcept
+{
+    std::cout << "Input now " << name << '.' << std::endl;
+    std::string input;
+    std::getline(std::cin, input);
+
+    try {
+        int rtn = std::stoi(input.substr(0, input.find(' ')));
+        output = static_cast<uint>(rtn);
+    } catch(const std::invalid_argument& e) {
+        std::cout << "ID를 입력해주세요" << std::endl << std::endl;
+    }
+
+    return output;
+}
+
+int inputValueWord(const char* name, int max_size, char* output) noexcept
 {
     int size = 0;
     std::string input;
 
     while(true) {
         std::cout << "Input now " << name << '.' << std::endl;
-        std::cin >> input;
+        std::getline(std::cin, input);
+        input = input.substr(0, input.find(' '));
         size = input.size();
         if(size >= max_size) {
             std::cout << "Input value too long: " << input << "(" << size << "byte)" << std::endl;
-            std::cout << "Please try again." << std::endl;
+            std::cout << "Please try again." << std::endl << std::endl << std::endl;
             continue;
         }
         break;
@@ -59,12 +123,25 @@ int inputValueStr(const char* name, int max_size, char* output) noexcept
     return size;
 }
 
-int inputValueUInt(const char* name, uint& output) noexcept
+int inputValueString(const char* name, int max_size, char* output) noexcept
 {
-    std::cout << "Input now " << name << '.' << std::endl;
-    std::cin >> output;
+    int size = 0;
+    std::string input;
 
-    return output;
+    while(true) {
+        std::cout << "Input now " << name << '.' << std::endl;
+        std::getline(std::cin, input);
+        size = input.size();
+        if(size >= max_size) {
+            std::cout << "Input value too long: " << input << "(" << size << "byte)" << std::endl;
+            std::cout << "Please try again." << std::endl << std::endl;
+            continue;
+        }
+        break;
+    }
+    strcpy(output, input.c_str());
+
+    return size;
 }
 
 int confirm(const char* message) noexcept
@@ -87,7 +164,7 @@ int confirm(const char* message) noexcept
             break;
         }
         else {
-            std::cout << "Invalid input. Please try again." << std::endl;
+            std::cout << "Invalid input. Please try again." << std::endl << std::endl;
         }
     }
 
@@ -132,7 +209,7 @@ int showAllTags() noexcept
 {
     std::ifstream inTagConf(TAG_FILE_NAME);
     if(!inTagConf.good()) {
-        std::cerr << "Error: Failed to open '" << TAG_FILE_NAME << "'" << std::endl;
+        std::cerr << "Error: Failed to open '" << TAG_FILE_NAME << "'" << std::endl << std::endl;
         return -1;
     }
 
@@ -144,13 +221,15 @@ int showAllTags() noexcept
         std::cout << '#' << tag.id << ' ' << tag.name << std::endl;
     }
     inTagConf.close();
+
+    return 0;
 }
 
 int findTag(int tag_id, TAG& output)
 {
     std::ifstream inTagConf(TAG_FILE_NAME);
     if(!inTagConf.good()) {
-        std::cerr << "Error: Failed to open '" << TAG_FILE_NAME << "'" << std::endl;
+        std::cerr << "Error: Failed to open '" << TAG_FILE_NAME << "'" << std::endl << std::endl;
         return -1;
     }
 

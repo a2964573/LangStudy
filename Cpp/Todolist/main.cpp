@@ -41,13 +41,16 @@ int main(int argc, char *argv[])
         }
 
         if(rtn <= 0) {
-            std::cout << "해당 리스트를 저장하지 않습니다.." << std::endl;
+            std::cout << "해당 리스트를 저장하지 않습니다.." << std::endl << std::endl;
             continue;
         }
 
         printList(list);
 
-        saveList(_global, list);
+        if(saveList(_global, list) < 0) {
+            std::cout << "Error: Save Failed" << std::endl;
+        }
+        std::cout << "저장완료" << std::endl << std::endl;
     }
 
     return 0;
@@ -56,7 +59,7 @@ int main(int argc, char *argv[])
 int init(int argc, char *argv[], GLOBAL& _global)
 {
     if(strlen(argv[1]) > 1024) {
-        std::cerr << "파일명이 너무 깁니다..: " << argv[1] << "(" << strlen(argv[1]) << "byte)"<< std::endl;
+        std::cerr << "파일명이 너무 깁니다..: " << argv[1] << "(" << strlen(argv[1]) << "byte)"<< std::endl << std::endl;
         return -1;
     }
 
@@ -69,16 +72,26 @@ int init(int argc, char *argv[], GLOBAL& _global)
 
         std::ofstream outTodoFile(_global.filename);
         if(!outTodoFile.good()) {
-            std::cerr << "cannot create file: " << _global.filename << std::endl;
+            std::cerr << "cannot create file: " << _global.filename << std::endl << std::endl;
             return -1;
         }
         outTodoFile.close();
     } else {
+        LIST list = {0,};
         std::string todoLine;
         while(std::getline(inTodoFile, todoLine)) {
-            // 가장 큰 lastId와 가장 큰 index를 가져와 _global에 저장한다
+            list.id = std::stoi(todoLine.substr(0, todoLine.find(',')));
+            if(_global.list_lastId < list.id) {
+                _global.list_lastId = list.id;
+            }
+
+            list.index = std::stoi(todoLine.substr(todoLine.find(',') + 1));
+            if(_global.list_lastIdx < list.index) {
+                _global.list_lastIdx = list.index;
+            }
         }
     }
+    inTodoFile.close();
 
     std::ifstream inTagConf(TAG_FILE_NAME);
     if(!inTagConf.good()) {
@@ -87,33 +100,64 @@ int init(int argc, char *argv[], GLOBAL& _global)
 
         std::ofstream outTagConf(TAG_FILE_NAME);
         if(!outTagConf.good()) {
-            std::cerr << "cannot create file: " << TAG_FILE_NAME << std::endl;
+            std::cerr << "cannot create file: " << TAG_FILE_NAME << std::endl << std::endl;
             return -1;
         }
         outTagConf.close();
     } else {
+        TAG tag = {0,};
         std::string tagLine;
         while(std::getline(inTagConf, tagLine)) {
-            // 가장 큰 lastId와 가장 큰 index를 가져와 _global에 저장한다.
+            tag.id = std::stoi(tagLine.substr(0, tagLine.find(',')));
+            if(_global.tag_lastId < tag.id) {
+                _global.tag_lastId = tag.id;
+            }
+            _global.tag_lastIdx++;
         }
     }
+    inTagConf.close();
 
     return 0;
 }
 
 int saveList(GLOBAL& _global, LIST& list)
 {
-    if(_global.list_lastId > list.id) {
+    if(_global.list_lastId < list.id) {
         _global.list_lastId = list.id;
     }
 
-    if(_global.list_lastIdx > list.index) {
+    if(_global.list_lastIdx < list.index) {
         _global.list_lastIdx = list.index;
+    }
+
+    std::string line;
+
+    // Insert
+    if(_global.list_lastId == list.id) {
+        std::ofstream outTodoFile;
+        outTodoFile.open(_global.filename, std::ios::app);
+        if(!outTodoFile) {
+            std::cerr << "Error: " << _global.filename << "can not open" << std::endl << std::endl;
+            return -1;
+        }
+
+        char appendLine[LIST_SIZE] = {0,};
+        int rtn = parseCSVLine(list, appendLine);
+        if(rtn < 0) {
+            std::cout << "Error: Parse CSV string failed" << std::endl << std::endl;
+            return -1;
+        }
+
+        outTodoFile << appendLine << '\n';
+    } 
+    // update / delete
+    else {
+        LIST* list = new LIST[_global.list_lastId];
+        std::ifstream inTodoFile(_global.filename);
     }
 
     return 0;
 }
-
 
 int insertList(GLOBAL& _global, LIST& output)
 {
@@ -122,8 +166,8 @@ int insertList(GLOBAL& _global, LIST& output)
     char nowDate[16  ] = {0,};
     char nowTime[16  ] = {0,};
 
-    inputValueStr("Title"      , sizeof(title), title);
-    inputValueStr("Description", sizeof(desc) , desc );
+    inputValueString("Title"      , sizeof(title), title);
+    inputValueString("Description", sizeof(desc) , desc );
 
     if(confirm("태그를 입력하시겠습니까?") > 0) {
         TAG tags[MAX_TAG_COUNT] = {0,};
@@ -138,6 +182,7 @@ int insertList(GLOBAL& _global, LIST& output)
 
     output.id      = _global.list_lastId  + 1;
     output.index   = _global.list_lastIdx + 1;
+    output.status  = 0;
 
     strcpy(output.in_date , nowDate   );
     strcpy(output.in_time , nowTime   );
@@ -188,7 +233,7 @@ int editTags(GLOBAL& _global, int count, TAG* output)
             break;
         }
         else {
-            std::cout << "Invalid input. Please try again." << std::endl;
+            std::cout << "Invalid input. Please try again." << std::endl << std::endl;
         }
     }
 
@@ -200,23 +245,27 @@ int addTag(int count, TAG* output)
     TAG tag = {0,};
     int rtn;
     if(count >= MAX_TAG_COUNT) {
-        std::cout << "더 이상 추가할 수 없습니다." << std::endl;
+        std::cout << "더 이상 추가할 수 없습니다." << std::endl << std::endl;
         return -1;
     }
 
     showAllTags();
-    inputValueUInt("Tag Id", tag.id);
+    rtn = inputValueUInt("Tag Id", tag.id);
+    if(rtn == 0) {
+        return -1;
+    }
+
     if(confirm("리스트에 태그를 추가하시겠습니까?") <= 0) {
         return -1;
     }
 
     rtn = findTag(tag.id, tag);
     if(rtn < 0) {
-        std::cout << "Find Tag Error." << std::endl;
+        std::cout << "Find Tag Error." << std::endl << std::endl;
     }
     else
     if(rtn == 0) {
-        std::cout << "Not Found Tag." << std::endl;
+        std::cout << "Not Found Tag." << std::endl << std::endl;
         rtn = -1;
     }
     else {
@@ -232,11 +281,15 @@ int delTag(int count, TAG* output)
     TAG tag = {0,};
     int rtn;
     if(count <= 0) {
-        std::cout << "삭제할 태그가 없습니다." << std::endl;
+        std::cout << "삭제할 태그가 없습니다." << std::endl << std::endl;
         return -1;
     }
 
-    inputValueUInt("Tag Id", tag.id);
+    rtn = inputValueUInt("Tag Id", tag.id);
+    if(rtn == 0) {
+        return -1;
+    }
+
     if(confirm("리스트에서 태그를 삭제하시겠습니까?") <= 0) {
         return -1;
     }
