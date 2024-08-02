@@ -29,6 +29,10 @@ int main(int argc, char *argv[])
         switch(key) {
             case MODE_LIST_INSERT :
                 rtn = insertList(_global, list);
+                if(rtn < 0) {
+                    continue;
+                }
+                
             break;
             case MODE_LIST_UPDATE :
                 continue;
@@ -38,8 +42,6 @@ int main(int argc, char *argv[])
                 if(rtn < 0) {
                     continue;
                 }
-
-                printList(list);
             break;
             case MODE_REFRESH:
                 continue;
@@ -72,6 +74,9 @@ int init(int argc, char *argv[], GLOBAL& _global)
         return -1;
     }
 
+    int len = 0;
+    std::string result;
+
     sprintf(_global.filename, "%s.txt"    , argv[1]);
     sprintf(_global.bkupname, "%s_bak.txt", argv[1]);
     sprintf(_global.tempname, "%s_tmp.txt", argv[1]);
@@ -91,14 +96,22 @@ int init(int argc, char *argv[], GLOBAL& _global)
         LIST list = {0,};
         std::string todoLine;
         while(std::getline(inTodoFile, todoLine)) {
-            list.id = std::stoi(todoLine.substr(0, todoLine.find(',')));
+            len = getFieldValue(todoLine, LISTID, LIST_LINE_DECIMAL, result);
+            if(len == 0) {
+                continue;
+            }
+            list.id = std::stoi(result);
             if(_global.list_lastId < list.id) {
                 _global.list_lastId = list.id;
             }
 
-            list.index = std::stoi(todoLine.substr(todoLine.find(',') + 1));
-            if(_global.list_lastIdx < list.index) {
-                _global.list_lastIdx = list.index;
+            len = getFieldValue(todoLine, LISTSTATUS, LIST_LINE_DECIMAL, result);
+            if(len == 0) {
+                continue;
+            }
+            list.status = std::stoi(result);
+            if(list.status != -1) {
+                _global.list_count++;
             }
         }
     }
@@ -119,11 +132,15 @@ int init(int argc, char *argv[], GLOBAL& _global)
         TAG tag = {0,};
         std::string tagLine;
         while(std::getline(inTagConf, tagLine)) {
-            tag.id = std::stoi(tagLine.substr(0, tagLine.find(',')));
+            len = getFieldValue(tagLine, TAGID, LIST_LINE_DECIMAL, result);
+            if(len == 0) {
+                continue;
+            }
+            tag.id = std::stoi(result);
             if(_global.tag_lastId < tag.id) {
                 _global.tag_lastId = tag.id;
             }
-            _global.tag_lastIdx++;
+            _global.tag_count++;
         }
     }
     inTagConf.close();
@@ -133,19 +150,13 @@ int init(int argc, char *argv[], GLOBAL& _global)
 
 int saveList(GLOBAL& _global, LIST& list)
 {
-    if(_global.list_lastId < list.id) {
-        _global.list_lastId = list.id;
-    }
-
-    if(_global.list_lastIdx < list.index) {
-        _global.list_lastIdx = list.index;
-    }
-
     char appendLine[LIST_SIZE] = {0,};
     int  rtn;
     // Insert
-    if(_global.list_lastId == list.id) {
-        rtn = parseCSVLine(list, appendLine);
+    if(_global.list_lastId < list.id) {
+        _global.list_lastId = list.id;
+
+        rtn = parseLine(list, appendLine);
         if(rtn < 0) {
             std::cout << "Error: Parse CSV string failed" << std::endl << std::endl;
             return -1;
@@ -164,12 +175,11 @@ int saveList(GLOBAL& _global, LIST& list)
     // update / delete
     else {
         std::ifstream inTodoFile;
-        inTodoFile.open(_global.filename, std::ios::app);
+        inTodoFile.open(_global.filename);
         if(!inTodoFile.good()) {
             std::cerr << "Error: " << _global.filename << "can not open" << std::endl << std::endl;
             return -1;
         }
-std::cout << "01" << std::endl;
 
         std::ofstream outTodoTemp;
         outTodoTemp.open(_global.tempname, std::ios::app);
@@ -178,52 +188,59 @@ std::cout << "01" << std::endl;
             inTodoFile.close();
             return -1;
         }
-std::cout << "02" << std::endl;
 
         char changeLine[LIST_SIZE] = {0,};
-        rtn = parseCSVLine(list, changeLine);
+        rtn = parseLine(list, changeLine);
         if(rtn < 0) {
             std::cout << "Error: Parse CSV string failed" << std::endl << std::endl;
             inTodoFile.close();
             outTodoTemp.close();
             return -1;
         }
-std::cout << "03" << std::endl;
 
+        std::string result;
         std::string line;
         while(std::getline(inTodoFile, line)) {
-            if(atoi(&line[0]) != list.id) {
-                outTodoTemp << appendLine << '\n';
-            } else {
+            rtn = getFieldValue(line, LISTID, LIST_LINE_DECIMAL, result);
+            if(rtn == 0) {
+                continue;
+            }
+
+            if(std::stoi(result) == list.id) {
                 outTodoTemp << changeLine << '\n';
+            } else {
+                outTodoTemp << line       << '\n';
             }
         }
         inTodoFile.close();
         outTodoTemp.close();
-std::cout << "04" << std::endl;
 
         if(std::rename(_global.filename, _global.bkupname) != 0) {
             std::cout << "Error: " << _global.filename << "Backup is Failed." << std::endl << std::endl;
             return -1;
         }
-std::cout << "05" << std::endl;
 
         if(std::rename(_global.tempname, _global.filename) != 0) {
             std::cout << "Error: " << _global.filename << "Save is Failed, Rollback..." << std::endl << std::endl;
             std::rename(_global.bkupname, _global.filename);
             return -1;
         }
-std::cout << "06" << std::endl;
 
         if(std::remove(_global.bkupname) != 0) {
             std::cout << "Error: " << _global.filename << "Save is Failed, Rollback..." << std::endl << std::endl;
             std::rename(_global.bkupname, _global.filename);
             return -1;
         }
-std::cout << "07" << std::endl;
     }
 
-    return 0;
+    rtn = getListCnt(_global);
+    if(rtn < 0) {
+        std::cout << "Error: Get List Count Failed" << std::endl << std::endl;
+    } else {
+        _global.list_count = rtn;
+    }
+
+    return rtn;
 }
 
 int insertList(GLOBAL& _global, LIST& output)
@@ -260,7 +277,6 @@ int insertList(GLOBAL& _global, LIST& output)
     getNowTime(NULL, sizeof(nowTime), nowTime);
 
     output.id      = _global.list_lastId  + 1;
-    output.index   = _global.list_lastIdx + 1;
     output.status  = 0;
 
     strcpy(output.in_date , nowDate   );
@@ -282,6 +298,11 @@ int updateList(GLOBAL& _global, LIST& list)
 
 int deleteList(GLOBAL& _global, LIST& list)
 {
+    if(_global.list_count == 0) {
+        std::cout << "리스트가 없습니다." << std::endl << std::endl;
+        return -1;
+    }
+
     LIST* lists = new LIST[_global.list_lastId];
     memset(lists, 0x00, sizeof(LIST) * _global.list_lastId);
 
@@ -290,14 +311,8 @@ int deleteList(GLOBAL& _global, LIST& list)
         std::cout << "Error: Get List All Failed" << std::endl << std::endl;
         return -1;
     }
-    else
-    if(rtn == 0) {
-        std::cout << "리스트가 없습니다." << std::endl << std::endl;
-        return -1;
-    }
 
     uint id = 0;
-
     rtn = inputValueUInt("삭제할 리스트의 ID를 입력해주세요.", id);
     if(rtn == 0) {
         return -1;
@@ -323,7 +338,7 @@ int deleteList(GLOBAL& _global, LIST& list)
         std::cout << "해당하는 리스트가 없습니다." << std::endl << std::endl;
         return -1;
     } else {
-        list.index = -1;
+        list.status = -1;
         return confirm("해당 리스트를 삭제하시겠습니까? (y/n)");
     }
 }
