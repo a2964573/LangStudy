@@ -15,13 +15,17 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    LIST list = {0,};
 
+    LIST list = {0,};
     int rtn;
     int key;
     while(true) {
         showTitle();
-        showList(_global);
+
+        rtn = showList(_global);
+        if( rtn < 0) {
+            return -1;
+        }
 
         memset(&list, 0x00, sizeof(list));
 
@@ -38,6 +42,11 @@ int main(int argc, char *argv[])
                 continue;
             // break;
             case MODE_LIST_DELETE :
+                if(_global.list_count == 0) {
+                    std::cout << "리스트가 없습니다." << std::endl << std::endl;
+                    continue;
+                }
+
                 rtn = deleteList(_global, list);
                 if(rtn < 0) {
                     continue;
@@ -158,7 +167,7 @@ int saveList(GLOBAL& _global, LIST& list)
 
         rtn = parseLine(list, appendLine);
         if(rtn < 0) {
-            std::cout << "Error: Parse CSV string failed" << std::endl << std::endl;
+            std::cout << "Error: String Line Parsing Failed" << std::endl << std::endl;
             return -1;
         }
 
@@ -298,23 +307,18 @@ int updateList(GLOBAL& _global, LIST& list)
 
 int deleteList(GLOBAL& _global, LIST& list)
 {
-    if(_global.list_count == 0) {
-        std::cout << "리스트가 없습니다." << std::endl << std::endl;
+    uint id = 0;
+    int rtn = inputValueUInt("삭제하려는 리스트의 ID를 입력해주세요.", id);
+    if(rtn == 0) {
         return -1;
     }
 
     LIST* lists = new LIST[_global.list_lastId];
     memset(lists, 0x00, sizeof(LIST) * _global.list_lastId);
 
-    int rtn = getListAll(_global, lists);
+    rtn = getListAll(_global, lists);
     if(rtn < 0) {
         std::cout << "Error: Get List All Failed" << std::endl << std::endl;
-        return -1;
-    }
-
-    uint id = 0;
-    rtn = inputValueUInt("삭제할 리스트의 ID를 입력해주세요.", id);
-    if(rtn == 0) {
         return -1;
     }
 
@@ -390,16 +394,16 @@ int addTag(int count, TAG* output)
         return -1;
     }
 
+    if(confirm("태그를 추가하시겠습니까? (y/n)") <= 0) {
+        return -1;
+    }
+
     int pos;
     for(pos = 0; pos < count; pos++) {
         if(output[pos].id == tag.id) {
             std::cout << "중복된 태그입니다." << std::endl << std::endl;
             return -1;
         }
-    }
-
-    if(confirm("태그를 추가하시겠습니까? (y/n)") <= 0) {
-        return -1;
     }
 
     rtn = findTag(tag.id, tag);
@@ -421,14 +425,13 @@ int addTag(int count, TAG* output)
 
 int delTag(int count, TAG* output)
 {
-    TAG tag = {0,};
-    int rtn;
     if(count <= 0) {
         std::cout << "삭제할 태그가 없습니다." << std::endl << std::endl;
         return -1;
     }
 
-    rtn = inputValueUInt("태그 ID를 입력해주세요.", tag.id);
+    TAG tag = {0,};
+    int rtn = inputValueUInt("태그 ID를 입력해주세요.", tag.id);
     if(rtn == 0) {
         return -1;
     }
