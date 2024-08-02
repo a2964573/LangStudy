@@ -25,6 +25,9 @@
     "#   #  #   # #  #  #   # #     #     # #   #\n" \
     "#   #   ###  ###    ###  ##### #  ###  #   #\n" \
     "############################################\n"
+#define MENU_GUIDE \
+    "i: Insert List  u: Update List  d: Delete List\n" \
+    "r: Refresh      q: Quit                       \n"
 
 #define TAG_FILE_NAME "_tag.ini"
 
@@ -43,6 +46,8 @@ using uint = unsigned int;
 
 typedef struct {
     char filename [1024];
+    char bkupname [1024];
+    char tempname [1024];
     uint list_lastIdx;
     uint list_lastId;
     uint tag_lastIdx;
@@ -74,6 +79,7 @@ typedef struct {
 int init(int argc, char* argv[], GLOBAL& _global);
 int saveList(GLOBAL& _global, LIST& list);
 int insertList(GLOBAL& _global, LIST& list);
+int deleteList(GLOBAL& _global, LIST& list);
 int editTags(GLOBAL& _global, int count, TAG* output);
 int addTag(int count, TAG* output);
 int delTag(int count, TAG* output);
@@ -91,6 +97,7 @@ int confirm(const char* message) noexcept;
 int inputValueUInt(const char* name, uint& output) noexcept;
 int inputValueWord(const char* name, int max_size, char* output) noexcept;
 int inputValueString(const char* name, int max_size, char* output) noexcept;
+int findString(std::string str, int start, char target, std::string& output);
 int getNowDate(char* format, int size, char* output) noexcept;
 int getNowTime(char* format, int size, char* output) noexcept;
 

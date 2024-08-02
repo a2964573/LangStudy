@@ -25,28 +25,36 @@ int main(int argc, char *argv[])
 
         memset(&list, 0x00, sizeof(list));
 
-        key = onClickKeyEvent("i: Insert List, u: Update List, d: Delete List, q: exit \n");
+        key = onClickKeyEvent(MENU_GUIDE);
         switch(key) {
             case MODE_LIST_INSERT :
                 rtn = insertList(_global, list);
             break;
             case MODE_LIST_UPDATE :
-            break;
+                continue;
+            // break;
             case MODE_LIST_DELETE :
+                rtn = deleteList(_global, list);
+                if(rtn < 0) {
+                    continue;
+                }
+
+                printList(list);
             break;
             case MODE_REFRESH:
                 continue;
             case MODE_QUIET  :
                 std::cout << "Bye" << std::endl;
                 return 0;
+            default:
+                std::cout << "Invalid input. Please try again." << std::endl << std::endl;
+                continue;
         }
 
         if(rtn <= 0) {
             std::cout << "해당 리스트를 저장하지 않습니다.." << std::endl << std::endl;
             continue;
         }
-
-        printList(list);
 
         if(saveList(_global, list) < 0) {
             std::cout << "Error: Save Failed" << std::endl;
@@ -64,7 +72,9 @@ int init(int argc, char *argv[], GLOBAL& _global)
         return -1;
     }
 
-    sprintf(_global.filename, "%s.txt", argv[1]);
+    sprintf(_global.filename, "%s.txt"    , argv[1]);
+    sprintf(_global.bkupname, "%s_bak.txt", argv[1]);
+    sprintf(_global.tempname, "%s_tmp.txt", argv[1]);
 
     std::ifstream inTodoFile(_global.filename);
     if(!inTodoFile.good()) {
@@ -131,10 +141,10 @@ int saveList(GLOBAL& _global, LIST& list)
         _global.list_lastIdx = list.index;
     }
 
-    int rtn;
+    char appendLine[LIST_SIZE] = {0,};
+    int  rtn;
     // Insert
     if(_global.list_lastId == list.id) {
-        char appendLine[LIST_SIZE] = {0,};
         rtn = parseCSVLine(list, appendLine);
         if(rtn < 0) {
             std::cout << "Error: Parse CSV string failed" << std::endl << std::endl;
@@ -153,12 +163,64 @@ int saveList(GLOBAL& _global, LIST& list)
     } 
     // update / delete
     else {
-        LIST* lists = new LIST[_global.list_lastId];
-        rtn = getListAll(_global, lists);
-        if(rtn < 0) {
-            std::cout << "Error: Get List All Failed" << std::endl << std::endl;
+        std::ifstream inTodoFile;
+        inTodoFile.open(_global.filename, std::ios::app);
+        if(!inTodoFile.good()) {
+            std::cerr << "Error: " << _global.filename << "can not open" << std::endl << std::endl;
             return -1;
         }
+std::cout << "01" << std::endl;
+
+        std::ofstream outTodoTemp;
+        outTodoTemp.open(_global.tempname, std::ios::app);
+        if(!outTodoTemp) {
+            std::cerr << "Error: " << _global.filename << "can not open" << std::endl << std::endl;
+            inTodoFile.close();
+            return -1;
+        }
+std::cout << "02" << std::endl;
+
+        char changeLine[LIST_SIZE] = {0,};
+        rtn = parseCSVLine(list, changeLine);
+        if(rtn < 0) {
+            std::cout << "Error: Parse CSV string failed" << std::endl << std::endl;
+            inTodoFile.close();
+            outTodoTemp.close();
+            return -1;
+        }
+std::cout << "03" << std::endl;
+
+        std::string line;
+        while(std::getline(inTodoFile, line)) {
+            if(atoi(&line[0]) != list.id) {
+                outTodoTemp << appendLine << '\n';
+            } else {
+                outTodoTemp << changeLine << '\n';
+            }
+        }
+        inTodoFile.close();
+        outTodoTemp.close();
+std::cout << "04" << std::endl;
+
+        if(std::rename(_global.filename, _global.bkupname) != 0) {
+            std::cout << "Error: " << _global.filename << "Backup is Failed." << std::endl << std::endl;
+            return -1;
+        }
+std::cout << "05" << std::endl;
+
+        if(std::rename(_global.tempname, _global.filename) != 0) {
+            std::cout << "Error: " << _global.filename << "Save is Failed, Rollback..." << std::endl << std::endl;
+            std::rename(_global.bkupname, _global.filename);
+            return -1;
+        }
+std::cout << "06" << std::endl;
+
+        if(std::remove(_global.bkupname) != 0) {
+            std::cout << "Error: " << _global.filename << "Save is Failed, Rollback..." << std::endl << std::endl;
+            std::rename(_global.bkupname, _global.filename);
+            return -1;
+        }
+std::cout << "07" << std::endl;
     }
 
     return 0;
@@ -166,15 +228,27 @@ int saveList(GLOBAL& _global, LIST& list)
 
 int insertList(GLOBAL& _global, LIST& output)
 {
+    int  len;
     char title  [256 ] = {0,};
     char desc   [1024] = {0,};
     char nowDate[16  ] = {0,};
     char nowTime[16  ] = {0,};
 
-    inputValueString("Title"      , sizeof(title), title);
-    inputValueString("Description", sizeof(desc) , desc );
+    while(true) {
+        len = inputValueString("표시될 제목을 입력해주세요.", sizeof(title), title);
+        if(len > 0) {
+            break;
+        }
 
-    if(confirm("태그를 입력하시겠습니까?") > 0) {
+        std::cout << "제목은 필수 입력 값입니다. 다시 입력해주세요..." << std::endl;
+    }
+
+    len = inputValueString("상세 설명을 입력해주세요.", sizeof(desc), desc);
+    if(len <= 0) {
+        strcpy(desc, "<내용없음>");
+    }
+
+    if(confirm("태그를 입력하시겠습니까? (y/n)") > 0) {
         TAG tags[MAX_TAG_COUNT] = {0,};
         int tag_cnt = editTags(_global, output.tag_cnt, tags);
         
@@ -196,21 +270,62 @@ int insertList(GLOBAL& _global, LIST& output)
     strcpy(output.clr_date, "00000000");
     strcpy(output.clr_time, "00000000");
 
-    return confirm("해당 리스트를 저장하시겠습니까?");
+    return confirm("해당 리스트를 저장하시겠습니까? (y/n)");
 }
 
 int updateList(GLOBAL& _global, LIST& list)
 {
+    
 
-
-    return confirm("해당 리스트를 수정하시겠습니까?");
+    return confirm("해당 리스트를 수정하시겠습니까? (y/n)");
 }
 
 int deleteList(GLOBAL& _global, LIST& list)
 {
+    LIST* lists = new LIST[_global.list_lastId];
+    memset(lists, 0x00, sizeof(LIST) * _global.list_lastId);
 
+    int rtn = getListAll(_global, lists);
+    if(rtn < 0) {
+        std::cout << "Error: Get List All Failed" << std::endl << std::endl;
+        return -1;
+    }
+    else
+    if(rtn == 0) {
+        std::cout << "리스트가 없습니다." << std::endl << std::endl;
+        return -1;
+    }
 
-    return confirm("해당 리스트를 삭제하시겠습니까?");
+    uint id = 0;
+
+    rtn = inputValueUInt("삭제할 리스트의 ID를 입력해주세요.", id);
+    if(rtn == 0) {
+        return -1;
+    }
+
+    int pos = 0;
+    while(true) {
+        list = lists[pos];
+        if(list.id == 0x00) {
+            pos = -1;
+            break;
+        }
+        else
+        if(list.id == id) {
+            break;
+        }
+
+        pos++;
+    }
+    delete[] lists;
+
+    if(pos < 0) {
+        std::cout << "해당하는 리스트가 없습니다." << std::endl << std::endl;
+        return -1;
+    } else {
+        list.index = -1;
+        return confirm("해당 리스트를 삭제하시겠습니까? (y/n)");
+    }
 }
 
 int editTags(GLOBAL& _global, int count, TAG* output)
@@ -255,7 +370,7 @@ int addTag(int count, TAG* output)
     }
 
     showAllTags();
-    rtn = inputValueUInt("Tag Id", tag.id);
+    rtn = inputValueUInt("태그 ID를 입력해주세요.", tag.id);
     if(rtn == 0) {
         return -1;
     }
@@ -268,7 +383,7 @@ int addTag(int count, TAG* output)
         }
     }
 
-    if(confirm("리스트에 태그를 추가하시겠습니까?") <= 0) {
+    if(confirm("태그를 추가하시겠습니까? (y/n)") <= 0) {
         return -1;
     }
 
@@ -298,12 +413,12 @@ int delTag(int count, TAG* output)
         return -1;
     }
 
-    rtn = inputValueUInt("Tag Id", tag.id);
+    rtn = inputValueUInt("태그 ID를 입력해주세요.", tag.id);
     if(rtn == 0) {
         return -1;
     }
 
-    if(confirm("리스트에서 태그를 삭제하시겠습니까?") <= 0) {
+    if(confirm("태그를 삭제하시겠습니까? (y/n)") <= 0) {
         return -1;
     }
 

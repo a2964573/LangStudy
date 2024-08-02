@@ -2,18 +2,18 @@
 
 int showTitle() noexcept
 {
-    system("cls");
+    // system("cls");
     std::cout << TODOLIST << std::endl;
-
+std::cout << "00" << std::endl;
     return 0;
 }
 
 int showList(GLOBAL& _global)
 {
-    LIST* list = new LIST[_global.list_lastId];
-    memset(list, 0, sizeof(LIST) * _global.list_lastId);
+    LIST* lists = new LIST[_global.list_lastId];
+    memset(lists, 0x00, sizeof(LIST) * _global.list_lastId);
 
-    int rtn = getListAll(_global, list);
+    int rtn = getListAll(_global, lists);
     if(rtn < 0) {
         std::cout << "Error: Get List All Failed" << std::endl << std::endl;
     }
@@ -23,84 +23,119 @@ int showList(GLOBAL& _global)
     }
     else {
         std::cout << std::setw(10) << std::left << "ID"    << '|';
-        std::cout << std::setw(10) << std::left << "Index" << '|';
         std::cout << std::setw(1 ) << std::left << "S"     << '|';
         std::cout <<                  std::left << "Title" << std::endl;
 
         int pos;
         for(pos = 0; pos < rtn; pos++) {
-            std::cout << std::setw(10                          ) << std::left << (list[pos].id                ) << '|';
-            std::cout << std::setw(10                          ) << std::left << (list[pos].index             ) << '|';
-            std::cout << std::setw(1                           ) << std::left << (list[pos].status ? 'V' : 'O') << '|';
-            std::cout << std::setw(std::strlen(list[pos].title)) << std::left << (list[pos].title             ) << std::endl << std::endl;
+            if(lists[pos].index <= 0) {
+                continue;
+            }
+
+            std::cout << std::setw(10                          )  << std::left << (lists[pos].id                ) << '|';
+            std::cout << std::setw(1                           )  << std::left << (lists[pos].status ? 'V' : 'O') << '|';
+            std::cout << std::setw(std::strlen(lists[pos].title)) << std::left << (lists[pos].title             ) << std::endl << std::endl;
         }
     }
-    delete[] list;
+    delete[] lists;
 
     return rtn;
 }
 
 int getListAll(GLOBAL& _global, LIST* output)
 {
-    int pos   = 0;
-    int tpos  = 0;
-    int start = 0;
-    int end   = 0;
+    int  pos    = 0;
+    int  tpos   = 0;
+    int  start  = 0;
+    int  end    = 0;
+    char target = ',';
+    LIST list   = {0,};
+    TAG  tag    = {0,};
     std::ifstream inTodoFile(_global.filename);
     std::string todoLine;
+    std::string result;
     while(std::getline(inTodoFile, todoLine)) {
-        end = todoLine.find(',');
-        output[pos].id        = std::stoi(todoLine.substr(start, end)        );
+        start = 0;
+        end   = 0;
+        memset(&list, 0x00, sizeof(list));
+        memset(&tag , 0x00, sizeof(tag ));
 
-        start = end + 1;
-        end = todoLine.find(',', start);
-        output[pos].index     = std::stoi(todoLine.substr(start, end)        );
+        end = findString(todoLine, end    , target, result);
+        if(end == 0) {
+            continue;
+        }
+        list.id        = std::stoi(result        );
 
-        start = end + 1;
-        end = todoLine.find(',', start);
-        output[pos].status    = std::stoi(todoLine.substr(start, end)        );
+        end = findString(todoLine, end + 1, target, result);
+        if(end == 0) {
+            continue;
+        }
+        list.index     = std::stoi(result        );
 
-        start = end + 1;
-        end = todoLine.find(',', start);
-        std::strcpy(output[pos].in_date , todoLine.substr(start, end).c_str());
+        end = findString(todoLine, end + 1, target, result);
+        if(end == 0) {
+            continue;
+        }
+        list.status    = std::stoi(result        );
 
-        start = end + 1;
-        end = todoLine.find(",", start);
-        std::strcpy(output[pos].in_time , todoLine.substr(start, end).c_str());
+        end = findString(todoLine, end + 1, target, result);
+        if(end == 0) {
+            continue;
+        }
+        std::strcpy(list.in_date , result.c_str());
 
-        start = end + 1;
-        end = todoLine.find(',', start);
-        std::strcpy(output[pos].title   , todoLine.substr(start, end).c_str());
+        end = findString(todoLine, end + 1, target, result);
+        if(end == 0) {
+            continue;
+        }
+        std::strcpy(list.in_time , result.c_str());
 
-        start = end + 1;
-        end = todoLine.find(',', start);
-        std::strcpy(output[pos].desc    , todoLine.substr(start, end).c_str());
+        end = findString(todoLine, end + 1, target, result);
+        if(end == 0) {
+            continue;
+        }
+        std::strcpy(list.title   , result.c_str());
 
-        start = end + 1;
-        end = todoLine.find(',', start);
-        std::strcpy(output[pos].clr_date, todoLine.substr(start, end).c_str());
-
-        start = end + 1;
-        end = todoLine.find(',', start);
-        std::strcpy(output[pos].clr_time, todoLine.substr(start, end).c_str());
-
-        start = end + 1;
-        end = todoLine.find(',', start);
-        output[pos].tag_cnt   = std::stoi(todoLine.substr(start, end)        );
-
-        for(tpos = 0; tpos < output[pos].tag_cnt; tpos++) {
-            start = end + 1;
-            end = todoLine.find(',', start);
-            output[pos].tags[tpos].id    = std::stoi(todoLine.substr(start, end));
-
-            start = end + 1;
-            end = todoLine.find(',', start);
-            if(end == std::string::npos) {
-                end = todoLine.length();
-            }
-            std::strcpy(output[pos].tags[tpos].name, todoLine.substr(start, end).c_str());
+        end = findString(todoLine, end + 1, target, result);
+        if(end == 0) {
+            std::strcpy(list.desc, result.c_str());
         }
 
+        end = findString(todoLine, end + 1, target, result);
+        if(end == 0) {
+            continue;
+        }
+        std::strcpy(list.clr_date, result.c_str());
+
+        end = findString(todoLine, end + 1, target, result);
+        if(end == 0) {
+            continue;
+        }
+        std::strcpy(list.clr_time, result.c_str());
+
+        end = findString(todoLine, end + 1, target, result);
+        if(end == 0) {
+            continue;
+        }
+        list.tag_cnt   = std::stoi(result        );
+
+        for(tpos = 0; tpos < list.tag_cnt; tpos++) {
+            end = findString(todoLine, end + 1, target, result);
+            if(end == 0) {
+                continue;
+            }
+            tag.id    = std::stoi(result         );
+
+            end = findString(todoLine, end + 1, target, result);
+            if(end == 0) {
+                continue;
+            }
+            std::strcpy(tag.name, result.c_str() );
+
+            list.tags[tpos] = tag;
+        }
+
+        output[pos] = list;
         pos++;
     }
     inTodoFile.close();
@@ -186,9 +221,11 @@ int confirm(const char* message) noexcept
     return rtn;
 }
 
-int inputValueUInt(const char* name, uint& output) noexcept
+int inputValueUInt(const char* message, uint& output) noexcept
 {
-    std::cout << "Input now " << name << '.' << std::endl;
+    if(message != NULL) {
+        std::cout << message << std::endl;
+    }
     std::string input;
     std::getline(std::cin, input);
 
@@ -202,13 +239,15 @@ int inputValueUInt(const char* name, uint& output) noexcept
     return output;
 }
 
-int inputValueWord(const char* name, int max_size, char* output) noexcept
+int inputValueWord(const char* message, int max_size, char* output) noexcept
 {
+    if(message != NULL) {
+        std::cout << message << std::endl;
+    }
+
     int size = 0;
     std::string input;
-
     while(true) {
-        std::cout << "Input now " << name << '.' << std::endl;
         std::getline(std::cin, input);
         input = input.substr(0, input.find(' '));
         size = input.size();
@@ -224,13 +263,15 @@ int inputValueWord(const char* name, int max_size, char* output) noexcept
     return size;
 }
 
-int inputValueString(const char* name, int max_size, char* output) noexcept
+int inputValueString(const char* message, int max_size, char* output) noexcept
 {
+    if(message != NULL) {
+        std::cout << message << std::endl;
+    }
+
     int size = 0;
     std::string input;
-
     while(true) {
-        std::cout << "Input now " << name << '.' << std::endl;
         std::getline(std::cin, input);
         size = input.size();
         if(size >= max_size) {
@@ -322,4 +363,16 @@ int findTag(int tag_id, TAG& output)
     }
 
     return output.id == 0x00 ? 0 : 1;
+}
+
+int findString(std::string str, int start, char target, std::string& output)
+{
+    int end = str.find(target, start);
+    if(end == std::string::npos) {
+        end = str.length();
+    }
+
+    output = str.substr(start, end - start);
+
+    return end;
 }
