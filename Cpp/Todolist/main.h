@@ -9,8 +9,11 @@
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
-#include <conio.h>
 
+#include <conio.h>
+#include <windows.h>
+
+// text
 #define TODOLIST \
     "############################################\n" \
     "# #####      ###         #           ##### #\n" \
@@ -23,24 +26,52 @@
     "#   #   ###  ###    ###  ##### #  ###  #   #\n" \
     "############################################\n"
 #define MENU_GUIDE \
-    "i: Insert List  u: Update List  d: Delete List\n" \
-    "r: Refresh      q: Quit                       \n"
+    "q: Quit                r: Refresh             i: Insert List         u: Update List  \n" \
+    "s: Show List Detail    d: Delete List         g: Edit Tags                           \n"
+#define LIST_UPDATE_GUIDE \
+    "                                                                     t: List Title   \n" \
+    "a: List Content All    s: List Status         d: List Description    g: List Tags    \n"
+#define TAG_EDIT_GUIDE \
+    "                       e: End                 i: Insert Tag(only File)               \n" \
+    "a: Add Tag(only List)  d: Delete Tag                                                 \n"
 
-#define TAG_FILE_NAME     "_tag.ini"
-#define LIST_LINE_DECIMAL (char)92
+
+// config
+#define TAG_FILE_NAME         "_tag.ini"
+#define TAG_BKUP_NAME         "_tag_bak.ini"
+#define TAG_TEMP_NAME         "_tag_tmp.ini"
+#define LINE_DECIMAL          (char)92
 #define PRINT_TAG_FORMAT(tag) "#" << tag.id << ' ' << tag.name
 
-// key
-#define ANSWER_YES        121
-#define ANSWER_NO         110
-#define MODE_LIST_INSERT  105
-#define MODE_LIST_UPDATE  117
-#define MODE_LIST_DELETE  100
-#define MODE_TAG_ADD      97
-#define MODE_TAG_DEL      100
-#define MODE_TAG_END      101
-#define MODE_REFRESH      114
-#define MODE_QUIET        113
+// key confirm
+#define ANSWER_YES         121
+#define ANSWER_NO          110
+
+// key menu
+#define MODE_LIST_INSERT   105
+#define MODE_LIST_UPDATE   117
+#define MODE_LIST_DELETE   100
+#define MODE_LIST_SHOW     115
+#define MODE_TAG_EDIT      103
+#define MODE_REFRESH       114
+#define MODE_QUIET         113
+
+// key list update
+#define LIST_UPDATE_ALL    99
+#define LIST_UPDATE_STATUS 115
+#define LIST_UPDATE_TITLE  116
+#define LIST_UPDATE_DESC   100
+#define LIST_UPDATE_TAG    103
+
+// key tag
+#define MODE_TAG_ADD       97
+#define MODE_TAG_INSERT    105
+#define MODE_TAG_DELETE    100
+#define MODE_TAG_END       101
+
+// value
+#define LIST_CLEAR         1
+#define LIST_UNCLEAR       0
 
 using uint = unsigned int;
 
@@ -59,6 +90,7 @@ typedef struct {
     uint id;
     char name     [64  ];
 } TAG;
+#define TAG_SIZE sizeof(TAG)
 
 enum {
     TAGID        = 1,
@@ -97,20 +129,31 @@ enum {
 // main
 int init(int argc, char* argv[], GLOBAL& _global);
 int saveList(GLOBAL& _global, LIST& list);
-int insertList(GLOBAL& _global, LIST& list);
-int deleteList(GLOBAL& _global, LIST& list);
+int insertList(GLOBAL& _global, LIST& output);
+int updateList(GLOBAL& _global, LIST& output);
+int deleteList(GLOBAL& _global, LIST& output);
+int showListDetail(GLOBAL& _global);
+int saveTags(GLOBAL& _global, int count, TAG* tags);
 int editTags(GLOBAL& _global, int count, TAG* output);
+int insertTag(GLOBAL& _global, int count, TAG* output);
 int addTag(int count, TAG* output);
 int delTag(int count, TAG* output);
 
 // util
 int showTitle() noexcept;
 int showList(GLOBAL& _global);
+int getListById(GLOBAL& _global, int id, LIST& output);
 int getListAll(GLOBAL& _global, LIST* output);
-int getListCnt(GLOBAL& _global);
-int printList(const LIST& list) noexcept;
-int parseLine(const LIST& list, char* output);
+int getListAllCnt(GLOBAL& _global);
+int printList(const LIST list) noexcept;
+int parseLineByList(const LIST list, char* output);
+int parseLineByTag(const TAG tag, char* output);
+int showTagsByListId(GLOBAL& _global, int id);
+int showTagsByArray(int tag_cnt, const TAG* tags);
 int showAllTags() noexcept;
+int getTagAll(GLOBAL& _global, TAG* output);
+int getTagAllCnt(GLOBAL& _global);
+int getTagLastId(GLOBAL& _global);
 int findTag(int tag_id, TAG& output);
 int findString(std::string str, int start, char target, std::string& output);
 int getFieldValue(std::string str, int column, char target, std::string& output);
@@ -121,5 +164,6 @@ int inputValueWord(const char* name, int max_size, char* output) noexcept;
 int inputValueString(const char* name, int max_size, char* output) noexcept;
 int getNowDate(char* format, int size, char* output) noexcept;
 int getNowTime(char* format, int size, char* output) noexcept;
+int alert(const char* message, uint second) noexcept;
 
 #endif // MAIN_H

@@ -11,7 +11,7 @@ int showTitle() noexcept
 int showList(GLOBAL& _global)
 {
     if(_global.list_count == 0) {
-        std::cout << "표시할 리스트가 없습니다." << std::endl << std::endl;
+        
         return 0;
     }
 
@@ -20,11 +20,11 @@ int showList(GLOBAL& _global)
 
     int rtn = getListAll(_global, lists);
     if(rtn < 0) {
-        std::cout << "Error: Get List All Failed" << std::endl << std::endl;
+        alert("Error: Get List All Failed", 1000);
     }
     else
     if(rtn == 0) {
-        std::cout << "표시할 리스트가 없습니다." << std::endl << std::endl;
+        alert("표시할 리스트가 없습니다.", 500);
     }
     else {
         std::cout << std::setw(10) << std::left << "ID"    << '|';
@@ -47,84 +47,117 @@ int showList(GLOBAL& _global)
     return rtn;
 }
 
+int getListById(GLOBAL& _global, int id, LIST& output)
+{
+    LIST* lists = new LIST[_global.list_lastId];
+    memset(lists, 0x00, sizeof(LIST) * _global.list_lastId);
+
+    int rtn = getListAll(_global, lists);
+    if(rtn < 0) {
+        alert("Error: Get List All Failed", 500);
+        return -1;
+    }
+
+    int pos = 0;
+    while(true) {
+        output = lists[pos];
+        if(output.id == 0x00) {
+            pos = -1;
+            break;
+        }
+        else
+        if(output.id == id) {
+            break;
+        }
+
+        pos++;
+    }
+    delete[] lists;
+
+    return pos;
+}
+
 int getListAll(GLOBAL& _global, LIST* output)
 {
     int  pos    = 0;
     int  tpos   = 0;
     int  start  = 0;
     int  end    = 0;
+
     LIST list   = {0,};
     TAG  tag    = {0,};
+
     std::ifstream inTodoFile(_global.filename);
     std::string todoLine;
     std::string result;
+
     while(std::getline(inTodoFile, todoLine)) {
         start = 0;
         end   = 0;
         memset(&list, 0x00, sizeof(list));
         memset(&tag , 0x00, sizeof(tag ));
 
-        end = findString(todoLine, end    , LIST_LINE_DECIMAL, result);
+        end = findString(todoLine, end    , LINE_DECIMAL, result);
         if(end == 0) {
             continue;
         }
         list.id        = std::stoi(result        );
 
-        end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+        end = findString(todoLine, end + 1, LINE_DECIMAL, result);
         if(end == 0) {
             continue;
         }
         list.status    = std::stoi(result        );
 
-        end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+        end = findString(todoLine, end + 1, LINE_DECIMAL, result);
         if(end == 0) {
             continue;
         }
         std::strcpy(list.in_date , result.c_str());
 
-        end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+        end = findString(todoLine, end + 1, LINE_DECIMAL, result);
         if(end == 0) {
             continue;
         }
         std::strcpy(list.in_time , result.c_str());
 
-        end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+        end = findString(todoLine, end + 1, LINE_DECIMAL, result);
         if(end == 0) {
             continue;
         }
         std::strcpy(list.title   , result.c_str());
 
-        end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+        end = findString(todoLine, end + 1, LINE_DECIMAL, result);
         if(result.length() > 0) {
             std::strcpy(list.desc, result.c_str());
         }
 
-        end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+        end = findString(todoLine, end + 1, LINE_DECIMAL, result);
         if(end == 0) {
             continue;
         }
         std::strcpy(list.clr_date, result.c_str());
 
-        end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+        end = findString(todoLine, end + 1, LINE_DECIMAL, result);
         if(end == 0) {
             continue;
         }
         std::strcpy(list.clr_time, result.c_str());
 
-        end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+        end = findString(todoLine, end + 1, LINE_DECIMAL, result);
         if(end == 0) {
             continue;
         }
         list.tag_cnt   = std::stoi(result        );
 
         for(tpos = 0; tpos < list.tag_cnt; tpos++) {
-            end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+            end = findString(todoLine, end + 1, LINE_DECIMAL, result);
             if(end == 0) {
                 continue;
             }
             tag.id    = std::stoi(result         );
 
-            end = findString(todoLine, end + 1, LIST_LINE_DECIMAL, result);
+            end = findString(todoLine, end + 1, LINE_DECIMAL, result);
             if(end == 0) {
                 continue;
             }
@@ -141,7 +174,7 @@ int getListAll(GLOBAL& _global, LIST* output)
     return pos;
 }
 
-int getListCnt(GLOBAL& _global)
+int getListAllCnt(GLOBAL& _global)
 {
     std::ifstream inTodoFile(_global.filename);
     if(!inTodoFile.good()) {
@@ -150,10 +183,12 @@ int getListCnt(GLOBAL& _global)
 
     int count = 0;
     int len   = 0;
+
     std::string todoLine;
     std::string result;
+
     while(std::getline(inTodoFile, todoLine)) {
-        len = getFieldValue(todoLine, LISTSTATUS, LIST_LINE_DECIMAL, result);
+        len = getFieldValue(todoLine, LISTSTATUS, LINE_DECIMAL, result);
         if(len <= 0) {
             continue;
         }
@@ -163,14 +198,13 @@ int getListCnt(GLOBAL& _global)
         }   
 
         count++;
-        std::cout << count << std::endl;
     }
     inTodoFile.close();
 
     return count;
 }
 
-int printList(const LIST& list) noexcept
+int printList(const LIST list) noexcept
 {
     std::cout << "ID         : " << list.id       << std::endl;
     std::cout << "Status     : " << list.status   << std::endl;
@@ -190,7 +224,7 @@ int printList(const LIST& list) noexcept
     return 0;
 }
 
-int parseLine(const LIST& list, char* output)
+int parseLineByList(const LIST list, char* output)
 {
     int len = sprintf(output, "%d\\%d\\%s\\%s\\%s\\%s\\%s\\%s\\%d"
                 , list.id      , list.status  , list.in_date
@@ -209,11 +243,59 @@ int parseLine(const LIST& list, char* output)
     return len;
 }
 
+int parseLineByTag(const TAG tag, char* output)
+{
+    std::cout << "Tag ID     : " << tag.id     << std::endl;
+    std::cout << "Tag Name   : " << tag.name  << std::endl;
+    return sprintf(output, "%d\\%s", tag.id, tag.name);
+}
+
+int showTagsByListId(GLOBAL& _global, int id)
+{
+    LIST list = {0,};
+    int rtn = getListById(_global, id, list);
+    if(rtn < 0) {
+        alert("해당하는 리스트가 없습니다.", 1000);
+        return -1;
+    }
+
+    if(list.tag_cnt > 0) {
+        std::cout     << "- Tags ----------------------------------------------------------" << std::endl;
+
+        int pos;
+        for(pos = 0; pos < list.tag_cnt; pos++) {
+            std::cout << "Tag        : #" << list.tags[pos].id << " " << list.tags[pos].name << std::endl;
+        }
+        std::cout     << "Tag Count  : "  << list.tag_cnt      << std::endl << std::endl;
+    } else {
+        alert("태그가 없습니다.", 1000);
+    }
+
+    return list.tag_cnt;
+}
+
+int showTagsByArray(int tag_cnt, const TAG* tags)
+{
+    if(tag_cnt > 0) {
+        std::cout     << "- Tags ----------------------------------------------------------" << std::endl;
+
+        int pos;
+        for(pos = 0; pos < tag_cnt; pos++) {
+            std::cout << "Tag        : #" << tags[pos].id << " " << tags[pos].name << std::endl;
+        }
+        std::cout     << "Tag Count  : "  << tag_cnt      << std::endl << std::endl;
+    } else {
+        alert("태그가 없습니다.", 1000);
+    }
+
+    return 0;
+}
+
 int showAllTags() noexcept
 {
     std::ifstream inTagConf(TAG_FILE_NAME);
     if(!inTagConf.good()) {
-        std::cerr << "Error: Failed to open '" << TAG_FILE_NAME << "'" << std::endl << std::endl;
+        alert("Error: Failed to open '_tag.ini'", 500);
         return -1;
     }
 
@@ -222,13 +304,13 @@ int showAllTags() noexcept
     std::string result;
     std::string tagLine;
     while(std::getline(inTagConf, tagLine)) {
-        len = getFieldValue(tagLine, TAGID, LIST_LINE_DECIMAL, result);
+        len = getFieldValue(tagLine, TAGID, LINE_DECIMAL, result);
         if(len == 0) {
             break;
         }
         tag.id = std::stoi(result);
 
-        len = getFieldValue(tagLine, TAGNAME, LIST_LINE_DECIMAL, result);
+        len = getFieldValue(tagLine, TAGNAME, LINE_DECIMAL, result);
         if(len == 0) {
             break;
         }
@@ -240,11 +322,108 @@ int showAllTags() noexcept
     return 0;
 }
 
+int getTagAll(GLOBAL& _global, TAG* output)
+{
+    std::ifstream inTagConf(TAG_FILE_NAME);
+    if(!inTagConf.good()) {
+        alert("Error: Failed to open '_tag.ini'", 500);
+        return -1;
+    }
+
+    int len = 0;
+    int pos = 0;
+
+    TAG tag = {0,};
+
+    std::string result;
+    std::string tagLine;
+    while(std::getline(inTagConf, tagLine)) {
+        len = getFieldValue(tagLine, TAGID, LINE_DECIMAL, result);
+        if(len == 0) {
+            break;
+        }
+        tag.id = std::stoi(result);
+
+        len = getFieldValue(tagLine, TAGNAME, LINE_DECIMAL, result);
+        if(len == 0) {
+            break;
+        }
+        std::strcpy(tag.name, result.c_str());
+
+        output[pos] = tag;
+        pos++;
+    }
+    inTagConf.close();
+
+    return pos;
+}
+
+int getTagAllCnt(GLOBAL& _global)
+{
+    std::ifstream inTagConf(TAG_FILE_NAME);
+    if(!inTagConf.good()) {
+        return -1;
+    }
+
+    int count = 0;
+    int len   = 0;
+
+    std::string tagLine;
+    std::string result;
+
+    while(std::getline(inTagConf, tagLine)) {
+        len = getFieldValue(tagLine, TAGID, LINE_DECIMAL, result);
+        if(len <= 0) {
+            continue;
+        }
+
+        if(std::stoi(result) == -1) {
+            continue;
+        }   
+
+        count++;
+    }
+    inTagConf.close();
+
+    return count;
+}
+
+int getTagLastId(GLOBAL& _global)
+{
+    std::ifstream inTagConf(TAG_FILE_NAME);
+    if(!inTagConf.good()) {
+        return -1;
+    }
+
+    int id  = 0;
+    int len = 0;
+
+    std::string tagLine;
+    std::string result;
+
+    while(std::getline(inTagConf, tagLine)) {
+        len = getFieldValue(tagLine, TAGID, LINE_DECIMAL, result);
+        if(len <= 0) {
+            continue;
+        }
+
+        id = std::stoi(result);
+        if(id < _global.tag_lastId) {
+            continue;
+        }   
+
+        _global.tag_lastId = id;
+    }
+    inTagConf.close();
+
+    return id;
+}
+
 int findTag(int tag_id, TAG& output)
 {
     std::ifstream inTagConf(TAG_FILE_NAME);
     if(!inTagConf.good()) {
-        std::cerr << "Error: Failed to open '" << TAG_FILE_NAME << "'" << std::endl << std::endl;
+        alert("Error: Failed to open ' _tag.ini'", 500);
         return -1;
     }
 
@@ -252,13 +431,13 @@ int findTag(int tag_id, TAG& output)
     std::string result;
     std::string tagLine;
     while(std::getline(inTagConf, tagLine)) {
-        len = getFieldValue(tagLine, TAGID, LIST_LINE_DECIMAL, result);
+        len = getFieldValue(tagLine, TAGID, LINE_DECIMAL, result);
         if(len == 0) {
             break;
         }
         output.id = std::stoi(result);
         if(output.id == tag_id) {
-            len = getFieldValue(tagLine, TAGNAME, LIST_LINE_DECIMAL, result);
+            len = getFieldValue(tagLine, TAGNAME, LINE_DECIMAL, result);
             if(len == 0) {
                 break;
             }
@@ -338,7 +517,7 @@ int confirm(const char* message) noexcept
             break;
         }
         else {
-            std::cout << "Invalid input. Please try again." << std::endl << std::endl;
+            alert("Invalid input. Please try again.", 1000);
         }
     }
 
@@ -357,7 +536,7 @@ int inputValueUInt(const char* message, uint& output) noexcept
         int rtn = std::stoi(input.substr(0, input.find(' ')));
         output = static_cast<uint>(rtn);
     } catch(const std::invalid_argument& e) {
-        std::cout << "ID를 입력해주세요" << std::endl << std::endl;
+        alert("0 이상의 수를 입력해주세요.", 1000);
     }
 
     return output;
@@ -376,8 +555,7 @@ int inputValueWord(const char* message, int max_size, char* output) noexcept
         input = input.substr(0, input.find(' '));
         size = input.size();
         if(size >= max_size) {
-            std::cout << "Input value too long: " << input << "(" << size << "byte)" << std::endl;
-            std::cout << "Please try again." << std::endl << std::endl << std::endl;
+            alert("Input value too long, please try again...", 1000);
             continue;
         }
         break;
@@ -399,8 +577,7 @@ int inputValueString(const char* message, int max_size, char* output) noexcept
         std::getline(std::cin, input);
         size = input.size();
         if(size >= max_size) {
-            std::cout << "Input value too long: " << input << "(" << size << "byte)" << std::endl;
-            std::cout << "Please try again." << std::endl << std::endl;
+            alert("Input value too long, please try again...", 1000);
             continue;
         }
         break;
@@ -441,5 +618,20 @@ int getNowTime(char* format, int size, char* output) noexcept
     std::tm* now_tm = std::localtime(&now_time);
 
     std::strftime(output, size, dformat, now_tm);
+    return 0;
+}
+int alert(const char* message, uint ms) noexcept
+{
+    char buffer[1024] = {0,};
+
+    if(message == NULL) {
+        strcpy(buffer, "다시 확인해주세요...");
+    } else {
+        strcpy(buffer, message);
+    }
+
+    std::cout << message << std::endl << std::endl;
+    Sleep(ms);
+
     return 0;
 }
