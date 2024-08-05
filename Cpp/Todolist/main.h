@@ -34,6 +34,8 @@
 #define TAG_EDIT_GUIDE \
     "                       e: End                 i: Insert Tag(only File)               \n" \
     "a: Add Tag(only List)  d: Delete Tag                                                 \n"
+#define TAG_INSERT_GUIDE \
+    "i: Tag ID(only List)   n: Tag Name                                                   \n"
 
 
 // config
@@ -64,8 +66,10 @@
 #define LIST_UPDATE_TAG    103
 
 // key tag
-#define MODE_TAG_ADD       97
 #define MODE_TAG_INSERT    105
+#define MODE_TAG_INSTID    105
+#define MODE_TAG_INSTNM    110
+#define MODE_TAG_UPDATE    117
 #define MODE_TAG_DELETE    100
 #define MODE_TAG_END       101
 
