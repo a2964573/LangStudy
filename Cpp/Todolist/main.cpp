@@ -4,10 +4,10 @@
 // argv[1]: filename
 int main(int argc, char *argv[])
 {
-    if(argc < 2) {
-        std::cerr << "Please enter more Arguments..." << std::endl;
-        return -1;
-    }
+    // if(argc < 2) {
+    //     std::cerr << "Please enter more Arguments..." << std::endl;
+    //     return -1;
+    // }
 
     GLOBAL _global = {0,};
     if(init(argc, argv, _global) < 0) {
@@ -123,66 +123,6 @@ int main(int argc, char *argv[])
             alert("Invalid input. Please try again.", 1000);
             continue;
         }
-
-        /*(
-        switch(key) {
-            case MODE_LIST_INSERT:
-                rtn = insertList(_global, list);
-                if(rtn < 0) {
-                    continue;
-                }
-            break;
-            case MODE_LIST_UPDATE:
-                if(_global.list_count == 0) {
-                    alert("리스트가 없습니다.");
-                    continue;
-                }
-
-                rtn = updateList(_global, list);
-                if(rtn < 0) {
-                    continue;
-                }
-            break;
-            case MODE_LIST_DELETE:
-                if(_global.list_count == 0) {
-                    alert("리스트가 없습니다.");
-                    continue;
-                }
-
-                rtn = deleteList(_global, list);
-                if(rtn < 0) {
-                    continue;
-                }
-            break;
-            case MODE_LIST_SHOW:
-                if(_global.list_count == 0) {
-                    alert("리스트가 없습니다.");
-                    continue;
-                }
-
-                showListDetail(_global);
-                continue;
-            case MODE_REFRESH:
-                continue;
-            case MODE_QUIET:
-                std::cout << "Bye" << std::endl;
-                return 0;
-            default:
-                alert("Invalid input. Please try again.");
-                continue;
-        }
-
-        if(rtn <= 0) {
-            alert("해당 리스트를 저장하지 않습니다..");
-            continue;
-        }
-
-        if(saveList(_global, list) < 0) {
-            alert("Error: Save Failed");
-            continue;
-        }
-        alert("저장완료");
-        */
     }
 
     return 0;
@@ -190,17 +130,25 @@ int main(int argc, char *argv[])
 
 int init(int argc, char *argv[], GLOBAL& _global)
 {
+    char filename[1024];
+    if(argc < 2) {
+        sprintf(filename, "todo");
+    }
+    else
     if(strlen(argv[1]) > 1024) {
         alert("파일명이 너무 깁니다..", 0);
         return -1;
+    }
+    else {
+        sprintf(filename, "%s", argv[1]);
     }
 
     int len = 0;
     std::string result;
 
-    sprintf(_global.filename, "%s.txt"    , argv[1]);
-    sprintf(_global.bkupname, "%s_bak.txt", argv[1]);
-    sprintf(_global.tempname, "%s_tmp.txt", argv[1]);
+    sprintf(_global.filename, "%s.txt"    , filename);
+    sprintf(_global.bkupname, "%s_bak.txt", filename);
+    sprintf(_global.tempname, "%s_tmp.txt", filename);
 
     std::ifstream inTodoFile(_global.filename);
     if(!inTodoFile.good()) {
@@ -402,7 +350,8 @@ int insertList(GLOBAL& _global, LIST& output)
 int updateList(GLOBAL& _global, LIST& output)
 {
     uint id = 0;
-    int rtn;
+    int  rtn;
+
     rtn = inputValueUInt("수정하려는 리스트의 ID를 입력해주세요.", id);
     if(rtn == 0) {
         return -1;
@@ -417,7 +366,7 @@ int updateList(GLOBAL& _global, LIST& output)
     int key = onClickKeyEvent(LIST_UPDATE_GUIDE);
     switch(key) {
         case LIST_UPDATE_ALL: {
-            if(output.status == LIST_UNCLEAR) {
+            if(output.status == LIST_CLEAR) {
                 alert("미완료 상태의 리스트만 수정 가능합니다.", 1000);
                 return 0;
             }
@@ -449,7 +398,7 @@ int updateList(GLOBAL& _global, LIST& output)
         }
         break;
         case LIST_UPDATE_TITLE: {
-            if(output.status == LIST_UNCLEAR) {
+            if(output.status == LIST_CLEAR) {
                 alert("미완료 상태의 리스트만 수정 가능합니다.", 1000);
                 return 0;
             }
@@ -465,7 +414,7 @@ int updateList(GLOBAL& _global, LIST& output)
         }
         break;
         case LIST_UPDATE_DESC: {
-            if(output.status == LIST_UNCLEAR) {
+            if(output.status == LIST_CLEAR) {
                 alert("미완료 상태의 리스트만 수정 가능합니다.", 1000);
                 return 0;
             }
@@ -480,7 +429,7 @@ int updateList(GLOBAL& _global, LIST& output)
         }
         break;
         case LIST_UPDATE_TAG: {
-            if(output.status == LIST_UNCLEAR) {
+            if(output.status == LIST_CLEAR) {
                 alert("미완료 상태의 리스트만 수정 가능합니다.", 1000);
                 return 0;
             }
