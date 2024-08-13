@@ -32,11 +32,8 @@
     "                                                                     t: List Title   \n" \
     "a: List Content All    s: List Status         d: List Description    g: List Tags    \n"
 #define TAG_EDIT_GUIDE \
-    "                       e: End                 i: Insert Tag(only File)               \n" \
-    "a: Add Tag(only List)  d: Delete Tag                                                 \n"
-#define TAG_INSERT_GUIDE \
-    "i: Tag ID(only List)   n: Tag Name                                                   \n"
-
+    "                       e: End                 i: Insert Tag                          \n" \
+    "                       d: Delete Tag                                                 \n"
 
 // config
 #define TAG_FILE_NAME         "_tag.ini"
@@ -59,7 +56,7 @@
 #define MODE_QUIET         113
 
 // key list update
-#define LIST_UPDATE_ALL    99
+#define LIST_UPDATE_ALL    97
 #define LIST_UPDATE_STATUS 115
 #define LIST_UPDATE_TITLE  116
 #define LIST_UPDATE_DESC   100
@@ -137,11 +134,11 @@ int insertList(GLOBAL& _global, LIST& output);
 int updateList(GLOBAL& _global, LIST& output);
 int deleteList(GLOBAL& _global, LIST& output);
 int showListDetail(GLOBAL& _global);
-int saveTags(GLOBAL& _global, int count, TAG* tags);
-int editTags(GLOBAL& _global, int count, TAG* output);
-int insertTag(GLOBAL& _global, int count, TAG* output);
-int addTag(int count, TAG* output);
-int delTag(int count, TAG* output);
+int saveTagsFile(GLOBAL& _global, int count, TAG* tags);
+int editTags(GLOBAL& _global, int isFile, int count, TAG* output);
+int insertTagFile(GLOBAL& _global, int count, TAG* output);
+int insertTagById(int count, TAG* output);
+int deleteTagById(int count, TAG* output);
 
 // util
 int showTitle() noexcept;
@@ -157,7 +154,8 @@ int showTagsByArray(int tag_cnt, const TAG* tags);
 int showAllTags() noexcept;
 int getTagAll(GLOBAL& _global, TAG* output);
 int getTagAllCnt(GLOBAL& _global);
-int getTagLastId(GLOBAL& _global);
+int getTagLastIdByFile(GLOBAL& _global);
+int getTagLastIdByArray(TAG* tag_array, int count);
 int findTag(int tag_id, TAG& output);
 int findString(std::string str, int start, char target, std::string& output);
 int getFieldValue(std::string str, int column, char target, std::string& output);

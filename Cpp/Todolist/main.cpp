@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         // List
         if( key == MODE_LIST_INSERT ||
             key == MODE_LIST_UPDATE ||
-            key == MODE_LIST_DELETE ) {
+            key == MODE_LIST_DELETE )   {
             if( key == MODE_LIST_INSERT ) {
                 rtn = insertList(_global, list);
                 if(rtn < 0) {
@@ -85,9 +85,9 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            tag_cnt = editTags(_global, rtn, tags);
+            tag_cnt = editTags(_global, 1, rtn, tags);
 
-            rtn = saveTags(_global, tag_cnt, tags);
+            rtn = saveTagsFile(_global, tag_cnt, tags);
             if(rtn < 0) {
                 alert("Error: Save Failed", 1000);
                 continue;
@@ -193,7 +193,7 @@ int init(int argc, char *argv[], GLOBAL& _global)
         outTagConf.close();
     } else {
         _global.tag_count  = getTagAllCnt(_global);
-        _global.tag_lastId = getTagLastId(_global);
+        _global.tag_lastId = getTagLastIdByFile(_global);
     }
     inTagConf.close();
 
@@ -319,7 +319,7 @@ int insertList(GLOBAL& _global, LIST& output)
 
     if(confirm("태그를 입력하시겠습니까? (y/n)") > 0) {
         TAG tags[MAX_TAG_COUNT] = {0,};
-        output.tag_cnt = editTags(_global, output.tag_cnt, tags);
+        output.tag_cnt = editTags(_global, 0, output.tag_cnt, tags);
         std::memcpy(output.tags, tags, sizeof(tags));
     }
 
@@ -428,9 +428,7 @@ int updateList(GLOBAL& _global, LIST& output)
                 return 0;
             }
 
-            TAG tags[MAX_TAG_COUNT] = {0,};
-            output.tag_cnt = editTags(_global, output.tag_cnt, tags);
-            std::memcpy(output.tags, tags, sizeof(tags));
+            output.tag_cnt = editTags(_global, 0, output.tag_cnt, output.tags);
         }
         break;
         default:
@@ -485,7 +483,7 @@ int showListDetail(GLOBAL& _global)
     return 0;
 }
 
-int saveTags(GLOBAL& _global, int count, TAG* tags)
+int saveTagsFile(GLOBAL& _global, int count, TAG* tags)
 {
     std::ifstream inTagConf;
     inTagConf.open(TAG_FILE_NAME);
@@ -553,7 +551,7 @@ int saveTags(GLOBAL& _global, int count, TAG* tags)
         _global.tag_count = rtn;
     }
 
-    rtn = getTagLastId(_global);
+    rtn = getTagLastIdByFile(_global);
     if(rtn < 0) {
         alert("Error: Get Tag Last ID Failed", 1000);
     } else {
@@ -563,7 +561,7 @@ int saveTags(GLOBAL& _global, int count, TAG* tags)
     return pos;
 }
 
-int editTags(GLOBAL& _global, int count, TAG* output)
+int editTags(GLOBAL& _global, int isFile, int count, TAG* output)
 {
     TAG tag = {0,};
 
@@ -577,19 +575,19 @@ int editTags(GLOBAL& _global, int count, TAG* output)
         showTagsByArray(tag_cnt, output);
 
         key = onClickKeyEvent(TAG_EDIT_GUIDE);
-        if( key == MODE_TAG_INSTID || 
-            key == MODE_TAG_INSTNM ||
+        if( key == MODE_TAG_INSERT ||
             key == MODE_TAG_DELETE ) {
 
             switch(key) {
-                case MODE_TAG_INSTID    :
-                    rtn = addTag(tag_cnt, output);
-                break;
-                case MODE_TAG_INSTNM :
-                    rtn = insertTag(_global, tag_cnt, output);
+                case MODE_TAG_INSERT :
+                    if(isFile) {
+                        rtn = insertTagFile(_global, tag_cnt, output);
+                    } else {
+                        rtn = insertTagById(tag_cnt, output);
+                    }
                 break;
                 case MODE_TAG_DELETE :
-                    rtn = delTag(tag_cnt, output);
+                    rtn = deleteTagById(tag_cnt, output);
                 break;
             }
 
@@ -611,83 +609,55 @@ int editTags(GLOBAL& _global, int count, TAG* output)
     return tag_cnt;
 }
 
-int insertTag(GLOBAL& _global, int count, int maxCnt, TAG* output)
+int insertTagFile(GLOBAL& _global, int count, TAG* output)
 {
-    if(maxCnt && count >= maxCnt) {
-        alert("더 이상 추가할 수 없습니다.", 1000);
+    showTagsByArray(count, output);
+
+    char name[64] = {0,};
+    if(inputValueString("태그를 입력해주세요.", sizeof(name), name) <= 0) {
+        std::cout << "필수 입력 값입니다." << std::endl;
         return -1;
     }
 
-    TAG tag = {0,};
-    int rtn;
     int pos;
-
-    showAllTags();
-
-    switch(onClickKeyEvent(TAG_INSERT_GUIDE)) {
-        case MODE_TAG_INSTID:
-            uint id = 0;
-            rtn = inputValueUInt("태그 ID를 입력해주세요.", id);
-            if(rtn == 0) {
-                return -1;
-            }
-
-            for(pos = 0; pos < count; pos++) {
-                if(output[pos].id == id) {
-                    alert("중복된 태그입니다.", 1000);
-                    return -1;
-                }
-            }
-
-            tag.id = id;
-        break;
-        case MODE_TAG_INSTNM:
-            char name[64] = {0,};
-            rtn = inputValueString("태그를 입력해주세요.", sizeof(name), name);
-            if(rtn <= 0) {
-                std::cout << "필수 입력 값입니다." << std::endl;
-                return 0;
-            }
-
-            for(pos = 0; pos < count; pos++) {
-                if(strcmp(output[pos].name, name) == 0) {
-                    alert("중복된 태그입니다.", 1000);
-                    return -1;
-                }
-            }
-
-            strcpy(tag.name, name);
-        break;
+    for(pos = 0; pos < count; pos++) {
+        if(strcmp(output[pos].name, name) == 0) {
+            alert("중복된 태그입니다.", 1000);
+            return -1;
+        }
     }
 
+    TAG tag = {0,};
+    strcpy(tag.name, name);
+    tag.id = getTagLastIdByArray(output, count) + 1;
 
-    if(maxCnt) {
-        rtn = findTag(tag.id, tag);
-        if(rtn < 0) {
-            alert("Find Tag Error.", 1000);
-        }
-        else
-        if(rtn == 0) {
-            alert("Not Found Tag.", 1000);
-            rtn = -1;
-        }
-        else {
-            std::memcpy(&output[count], &tag, sizeof(tag));
-            rtn = count + 1;
-        }
-    } else {
-        rtn = tag.id;
-    }
-
-    return rtn;
+    std::memcpy(&output[count], &tag, sizeof(tag));
+    return count + 1;
 }
 
-int insertTagByName(GLOBAL& _global, int count, int maxCnt, TAG* output)
+int insertTagById(int count, TAG* output)
 {
-    
-    TAG  tag      = {0,};
+    showAllTags();
 
-    
+    uint id = 0;
+    if(inputValueUInt("태그 ID를 입력해주세요.", id) <= 0) {
+        std::cout << "필수 입력 값입니다." << std::endl;
+        return -1;
+    }
+
+    int pos;
+    for(pos = 0; pos < count; pos++) {
+        if(output[pos].id == id) {
+            alert("중복된 태그 ID입니다.", 1000);
+            return -1;
+        }
+    }
+
+    TAG tag = {0,};
+    if(findTag(id, tag) == 0) {
+        alert("해당하는 태그가 없습니다.", 1000);
+        return -1;
+    }
 
     std::memcpy(&output[count], &tag, sizeof(tag));
     return count + 1;

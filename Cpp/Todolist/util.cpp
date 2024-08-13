@@ -388,7 +388,7 @@ int getTagAllCnt(GLOBAL& _global)
     return count;
 }
 
-int getTagLastId(GLOBAL& _global)
+int getTagLastIdByFile(GLOBAL& _global)
 {
     std::ifstream inTagConf(TAG_FILE_NAME);
     if(!inTagConf.good()) {
@@ -415,6 +415,19 @@ int getTagLastId(GLOBAL& _global)
         _global.tag_lastId = id;
     }
     inTagConf.close();
+
+    return id;
+}
+
+int getTagLastIdByArray(TAG* tag_array, int count)
+{
+    int id = 0;
+    int pos;
+    for(pos = 0; pos < count; pos++) {
+        if(tag_array[pos].id > id) {
+            id = tag_array[pos].id;
+        }
+    }
 
     return id;
 }
@@ -620,6 +633,7 @@ int getNowTime(char* format, int size, char* output) noexcept
     std::strftime(output, size, dformat, now_tm);
     return 0;
 }
+
 int alert(const char* message, uint ms) noexcept
 {
     char buffer[1024] = {0,};
