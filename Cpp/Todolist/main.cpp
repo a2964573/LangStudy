@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         }
         else
         if( key == MODE_QUIET ) {
-            alert("Bye", 0);
+            alert("Bye", 1000);
             return 0;
         }
         else {
