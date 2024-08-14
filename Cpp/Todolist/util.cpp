@@ -58,23 +58,16 @@ int getListById(GLOBAL& _global, int id, LIST& output)
         return -1;
     }
 
-    int pos = 0;
-    while(true) {
-        output = lists[pos];
-        if(output.id == 0x00) {
-            pos = -1;
+    int pos;
+    for(pos = 0; pos < rtn; pos++) {
+        if(lists[pos].id == id) {
+            output = lists[pos];
             break;
         }
-        else
-        if(output.id == id) {
-            break;
-        }
-
-        pos++;
     }
     delete[] lists;
 
-    return pos;
+    return output.id == 0x00 ? -1 : output.id;
 }
 
 int getListAll(GLOBAL& _global, LIST* output)
