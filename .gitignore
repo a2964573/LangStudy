@@ -23,6 +23,7 @@ C/*/*.exe
 C/*/*.txt
 
 // C++
+Cpp/Tetris
 Cpp/*/*.exe
 Cpp/*/*.txt
 Cpp/*/*.ini
