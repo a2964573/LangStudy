@@ -2,31 +2,27 @@
 desktop.ini
 
 // git
-*/.git
-*/*/.git
-*/.gitignore
-*/.README.md
+**/.git
+**/.gitignore
+**/.README.md
 
 // vscode
-.vscode
-*/.vscode
-*/*/.vscode
+**/.vscode
 
 // node
-*/*/node_modules
-*/*/*/node_modules
+**/node_modules
 
 // C
 C/ParsePacket
 C/Galaxy
-C/*/*.exe
-C/*/*.txt
+C/**/*.exe
+C/**/*.txt
 
 // C++
 Cpp/Tetris
-Cpp/*/*.exe
-Cpp/*/*.txt
-Cpp/*/*.ini
+Cpp/**/*.exe
+Cpp/**/*.txt
+Cpp/**/*.ini
 
 // Javaccript
 Javascript/BlueStar
@@ -38,30 +34,29 @@ Javascript/TodoList
 Javascript/Portfolio
 
 // Python
-Python/*/__pycache__
-Python/*/build
-Python/*/dist
-Python/*/log
-Python/*/*.spec
+Python/**/__pycache__
+Python/**/build
+Python/**/dist
+Python/**/log
+Python/**/*.spec
 Python/HanaAutoVPN
 
 // SpiderGen
-SpiderGen/*/bin
-SpiderGen/*/Bridge
-SpiderGen/*/Library
-SpiderGen/*/Query
-SpiderGen/*/Template
-SpiderGen/*/*.inf
-SpiderGen/*/*.inc
-SpiderGen/*/*.prj
-SpiderGen/*/*/*.prj
+SpiderGen/**/bin
+SpiderGen/**/Bridge
+SpiderGen/**/Library
+SpiderGen/**/Query
+SpiderGen/**/Template
+SpiderGen/**/*.inf
+SpiderGen/**/*.inc
+SpiderGen/**/*.prj
 
 
 // Unreal
-Unreal/*/.vs
-Unreal/*/Intermediate
-Unreal/*/Saved
-Unreal/*/Build
-Unreal/*/Plugins
-Unreal/*/*.sln
-Unreal/*/*._BuiltData.uasset
+Unreal/**/.vs
+Unreal/**/Intermediate
+Unreal/**/Saved
+Unreal/**/Build
+Unreal/**/Plugins
+Unreal/**/*.sln
+Unreal/**/*._BuiltData.uasset
