@@ -13,6 +13,7 @@ desktop.ini
 **/node_modules
 
 // C
+C/ChatCurses
 C/ParsePacket
 C/Galaxy
 C/**/*.exe
@@ -20,6 +21,7 @@ C/**/*.txt
 
 // C++
 Cpp/Tetris
+Cpp/GhostLeg
 Cpp/**/*.exe
 Cpp/**/*.txt
 Cpp/**/*.ini
