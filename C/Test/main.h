@@ -1,8 +1,9 @@
 #include <stdio.h>
-#include <conio.h>
+#include <ncurses.h>
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 typedef struct _TEST_STRUCT{
 	int test1;
