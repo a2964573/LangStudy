@@ -20,6 +20,7 @@ C/Galaxy
 C/**/*.exe
 C/**/*.txt
 C/**/*.sw*
+C/**/execute
 
 // C++
 Cpp/Tetris
