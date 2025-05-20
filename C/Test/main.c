@@ -1,42 +1,51 @@
-#include "main.h"
+#include <stdio.h>
 
-struct Example {
-    char a[32];
-    int b;
-    char c;
-    char d[13];
-};
 
-int getObjectSize(TEST_STRUCT* tt)
+int quick_sort(int* arr, int len, int pivot)
 {
-    int answer = 0;
+	printf("[");
+	for(int i = 0; i < len; i++) {
+		printf("%d ", arr[i]);
+	}
+	printf("]\n");
 
-    answer = sizeof(*tt) / sizeof(tt[0]);
+	if(pivot >= len) {
+		return 0;
+	}
 
-    printf("getObjectSize | sizeof tt: %d / sizeof *tt: %d / sizeof tt[0]: %d\n", sizeof(tt), sizeof(*tt), sizeof(tt[0]));
+	int temp;
+	int index = (pivot + 1);
 
-    return answer;
+	while(index < len) {
+		if(arr[pivot] < arr[index]) {
+			temp = arr[pivot];
+			arr[pivot] = arr[index];
+			arr[index] = temp;
+			pivot = index;
+
+			index--;
+			continue;
+		}
+
+		index++;
+	}
+
+	quick_sort(arr, pivot, 0);
+	quick_sort(arr, len, (pivot + 1));
+	return 0;
 }
 
-void main()
+int main(int argc, char* argv[])
 {
-    int rtn = 0;
-    TEST_STRUCT tt[16];
+	int arr[] = {5, 3, 8, 4, 2, 7, 1, 10};
+	int len = (sizeof(arr) / sizeof(arr[0]));
 
-    memset(tt, 0, sizeof(tt));
+	quick_sort(arr, len, 0);
+	printf("[");
+	for(int i = 0; i < len; i++) {
+		printf("%d ", arr[i]);
+	}
+	printf("]\n");
 
-    printf("sizeof TEST_STRUCT: %d\n", sizeof(TEST_STRUCT));
-
-    char* a;
-    long long* b;
-
-    printf("sizeof a: %d\n", sizeof(a));
-    printf("sizeof b: %d\n", sizeof(b));
-
-    rtn = getObjectSize(tt);
-    printf("object size: %d\n", rtn);
-
-    printf("Example size: %d / %d\n", sizeof(struct Example), sizeof(long long));
-
-    return;
+    return 0;
 }
