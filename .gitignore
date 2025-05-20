@@ -19,6 +19,7 @@ C/ParsePacket
 C/Galaxy
 C/**/*.exe
 C/**/*.txt
+C/**/*.sw*
 
 // C++
 Cpp/Tetris
