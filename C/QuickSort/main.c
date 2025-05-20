@@ -1,52 +1,62 @@
-#include "main.h"
+#include <stdio.h>
+#include <time.h>
 
-void main(){
-    int arr [ARRAY_SIZE] = {0, };
 
-    createArr(arr);
-    printArr(arr);
+int quick_sort(int* arr, int start, int end)
+{
+    if((start + 1) >= end) {
+        return 0;
+    }
 
-    return;
-}
+    int* pivot = arr + (end - 1);
+    int* ldata = arr + start;
+    int* rdata = arr + start;
+    int temp;
 
-int createArr(int* arr){
-    int loopCount = 0;
-
-    while(loopCount < ARRAY_SIZE){
-        int rtn = createValue(arr, loopCount);
-
-        if(rtn < 0){
-            loopCount--;
-            continue;
+    while(rdata < pivot) {
+        if(*rdata < *pivot) {
+            temp = *ldata;
+            *ldata = *rdata;
+            *rdata = temp;
+            ldata++;
         }
-
-        arr[loopCount++] = rtn;
+        rdata++;
     }
+
+    temp = *ldata;
+    *ldata = *pivot;
+    *pivot = temp;
+
+    int pidx = ldata - arr;
+
+    quick_sort(arr, start     , pidx);
+    quick_sort(arr, (pidx + 1), end );
 
     return 0;
 }
 
-int createValue(int* arr, int loopMax){
-    srand(time(NULL));
+int main(int argc, char* argv[])
+{
+	int arr[] = {5, 3, 8, 4, 2, 7, 1, 10};
+	int len = (sizeof(arr) / sizeof(arr[0]));
 
-    int loopCount = 0;
+	clock_t s_time = clock();
+	{
+		quick_sort(arr, 0, len);
+	}
+	clock_t e_time = clock();
 
-    while(1){
-        int value = rand() % ARRAY_MAX + 1;
-        
-        if(arr[loopCount] == value) return -1;
-        if(loopCount == loopMax - 1) return value;
+	printf("[");
+	for(int i = 0; i < len; i++) {
+		printf("%d", arr[i]);
 
-        loopCount++;
-    }
-}
-
-int printArr(const int* arr){
-    int loopCount = 0;
-    while(loopCount < ARRAY_SIZE){
-        printf("%d", arr[loopCount++]);
-        printf(loopCount == ARRAY_SIZE ? "\n" : " | ");
-    }
+		if(i != (len - 1)) {
+			printf(" ");
+		}
+	}
+	printf("]\n");
+	printf("Elapsed time: %.6f seconds\n", ((double)(e_time - s_time) / CLOCKS_PER_SEC));
 
     return 0;
 }
+
