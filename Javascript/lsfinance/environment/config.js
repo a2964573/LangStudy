@@ -1,0 +1,11 @@
+const config = {
+	app_key: "PSOGeFT07gNFzOWbIoI2sMbsqkIfZkRuSgp5",
+	app_secret: "C7YxE1wQp41982ZfLWD0NaWAlqP02pQL",
+	access_tocken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0b2tlbiIsImF1ZCI6IjIzMTgzNmE2LWI2YjYtNDQ1MC1hZDRjLWY4MjRjMzg5NDM1OCIsIm5iZiI6MTc2MDY4MTgyMywiZ3JhbnRfdHlwZSI6IkNsaWVudCIsImlzcyI6InVub2d3IiwiZXhwIjoxNzYwNzM4Mzk5LCJpYXQiOjE3NjA2ODE4MjMsImp0aSI6IlBTT0dlRlQwN2dORnpPV2JJb0kyc01ic3FrSWZaa1J1U2dwNSJ9.p21JoHmQ657r2qTS4ddcvRmQMwfzFEnhibBfqeZx3k1UV-uLMRvwoy9MUDroeBSs81Mk4wUTCBko-jLJqcwwRw",
+
+	option: {
+	}
+}
+
+module.exports = config;
+

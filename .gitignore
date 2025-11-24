@@ -19,6 +19,7 @@ KISA*
 C/ChatCurses
 C/ParsePacket
 C/Galaxy
+C/Seed
 C/**/*.exe
 C/**/*.txt
 C/**/*.sw*
