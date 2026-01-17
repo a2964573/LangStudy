@@ -35,6 +35,7 @@ Javascript/TeemBee
 Javascript/TodoList
 Javascript/Portofolio
 Javascript/Portfolio
+Javaccript/EasyToolkit
 
 // Python
 Python/**/__pycache__
@@ -63,3 +64,7 @@ Unreal/**/Build
 Unreal/**/Plugins
 Unreal/**/*.sln
 Unreal/**/*._BuiltData.uasset
+
+// AI
+**/_ai_*
+AI
