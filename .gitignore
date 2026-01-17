@@ -1,5 +1,8 @@
 // directory
 desktop.ini
+EasyToolkit
+Obsidian
+KISA*
 
 // git
 **/.git
@@ -16,8 +19,11 @@ desktop.ini
 C/ChatCurses
 C/ParsePacket
 C/Galaxy
+C/Seed
 C/**/*.exe
 C/**/*.txt
+C/**/*.sw*
+C/**/execute
 
 // C++
 Cpp/Tetris
